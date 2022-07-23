@@ -3,21 +3,7 @@ import 'dart:convert';
 import 'package:dir_book/bookmarks/bookmarks.dart';
 import 'package:dir_book/mainPage/mainPage.dart';
 import 'package:flutter/material.dart';
-import 'package:dir_book/main.dart';
 import 'package:flutter/services.dart';
-
-Future<void> loadData() async {
-  print("Loading Starts...");
-  await Future.delayed(const Duration(seconds: 2));
-
-  String jsonString = await rootBundle.loadString("assets/bookmarks.json");
-
-  Map<String, dynamic> decodedJson = jsonDecode(jsonString);
-
-  BookMarks.setOfBookmarks = decodedJson;
-
-  print("Suceessfully Loaded");
-}
 
 void main() {
   runApp(const MyApp());
@@ -34,18 +20,36 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.purple,
       ),
-      home: MyHomePage(),
+      home: MyHomePage(
+        bmStorage: BookMarkStorage(),
+      ),
     );
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
+  BookMarkStorage bmStorage;
+  MyHomePage({super.key, required this.bmStorage});
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  @override
+  void initState() {
+    super.initState();
+    widget.bmStorage.readStorage().then((value) {
+      setState(() {
+        Map<String, dynamic> decodedJson = jsonDecode(value);
+        widget.bmStorage.setOfBookmarks = decodedJson;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    loadData();
-
     return MainPage(
-      bm: BookMarks.setOfBookmarks,
+      bm: widget.bmStorage.setOfBookmarks,
       parentRoot: "/",
     );
   }
