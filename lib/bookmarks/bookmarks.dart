@@ -1,3 +1,4 @@
+import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 import 'dart:io';
@@ -24,7 +25,7 @@ class BookMarkStorage {
 
   Future<File> get _localFile async {
     final path = await _localPath;
-    return File('$path/bookmarks.json');
+    return File('$path/test.json');
   }
 
   Future<String> readStorage() async {
@@ -39,7 +40,7 @@ class BookMarkStorage {
       String emptyJsonString = jsonEncode({});
 
       final path = await _localPath;
-      File f = File('$path/bookmarks.json');
+      File f = File('$path/test.json');
       f.writeAsStringSync(emptyJsonString);
 
       return emptyJsonString;
@@ -51,5 +52,35 @@ class BookMarkStorage {
 
     // Write the file
     return file.writeAsString(content);
+  }
+
+  Future<bool> importData() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['json'],
+    );
+
+    if (result != null && result.files.first.extension == 'json') {
+      try {
+        PlatformFile pFile = result.files.first;
+
+        print(pFile.name);
+        print(pFile.bytes);
+        print(pFile.size);
+        print(pFile.extension);
+        print(pFile.path);
+
+        File file = File(pFile.path!);
+        String content = file.readAsStringSync();
+
+        await writeStorage(content);
+
+        return true;
+      } catch (e) {
+        return false;
+      }
+    } else {
+      return false;
+    }
   }
 }
