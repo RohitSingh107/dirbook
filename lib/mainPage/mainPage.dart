@@ -1,8 +1,6 @@
-import 'package:dir_book/bookmarks/bookmarks.dart';
+import 'package:dir_book/bookmark_storage/bookmarks_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:restart_app/restart_app.dart';
-import 'package:file_picker/file_picker.dart';
-import 'dart:io';
 
 class MainPage extends StatefulWidget {
   Map<String, dynamic> bm;
@@ -47,21 +45,43 @@ class _MainPageState extends State<MainPage> {
           ListTile(
             title: const Text('Import'),
             onTap: () async {
+              print(
+                  "Here importing starts-------------------------------------------------------------------------------------------------------------");
+
               bool sucess = await BookMarkStorage().importData();
+
               if (sucess) {
-                Restart.restartApp();
+                // Restart.restartApp();
+                print(
+                    "Here app should be restarted-----------------------------------------------------------------------------------------------------------------------------");
               } else {
-                await importFailedDialog(
-                    context); // This might cause issues ----------------------------------------------------------------------------------
+                // await importExportDialog(
+                //     context,
+                //     "Import Failed",
+                //     "Please select a valid json file");
+                showMessage(context,
+                    "Import Failed! Please select a valid json file"); // This might cause issues -------------------------------------------------------------------
               }
             },
           ),
           ListTile(
             title: const Text('Export'),
             onTap: () async {
-              // ------------------------------------------------------------------------
+              bool sucess = await BookMarkStorage().exportData();
+              if (sucess) {
+                // await importExportDialog(
+                //     context, // This might cause issues ----------------------------------------------------------------------------------
+                //     "Sucess!",
+                //     "Data Exported sucessfully");
 
-              // ------------------------------------------------------------------------
+                showMessage(context, "Data Exported sucessfully!");
+              } else {
+                // await importExportDialog(
+                //     context, // This might cause issues ----------------------------------------------------------------------------------
+                //     "Export Failed",
+                //     "Export Failed");
+                showMessage(context, "Export Failed!");
+              }
             },
           ),
         ],
@@ -74,7 +94,7 @@ ListTile directoryTile(BuildContext context, Map<String, dynamic> bm,
     List<String> listOfItems, int index) {
   return ListTile(
     title: Text(listOfItems[index]),
-    leading: Icon(Icons.folder),
+    leading: const Icon(Icons.folder),
     onTap: () {
       Navigator.push(context, MaterialPageRoute(builder: (context) {
         return MainPage(
@@ -91,32 +111,39 @@ ListTile bookmarkTile(BuildContext context, Map<String, dynamic> bm,
     List<String> listOfItems, int index) {
   return ListTile(
     title: Text(listOfItems[index]),
-    leading: Icon(Icons.link),
-    onTap: () {
-      print(bm[listOfItems[index]]);
-    },
+    leading: const Icon(Icons.link),
+    onTap: () {},
     subtitle: Text(bm[listOfItems[index]].toString()),
   );
 }
 
-Future<dynamic> importFailedDialog(BuildContext context) {
-  return showDialog(
-    context: context,
-    builder: (ctx) => AlertDialog(
-      title: const Text("Import Failed"),
-      content: const Text("Please select a valid json file"),
-      actions: <Widget>[
-        TextButton(
-          onPressed: () {
-            Navigator.of(ctx).pop();
-          },
-          child: Container(
-            color: Colors.green,
-            padding: const EdgeInsets.all(14),
-            child: const Text("okay"),
-          ),
-        ),
-      ],
+// Future<dynamic> importExportDialog(
+//     BuildContext context, String title, String content) {
+//   return showDialog(
+//     context: context,
+//     builder: (ctx) => AlertDialog(
+//       title: Text(title),
+//       content: Text(content),
+//       actions: <Widget>[
+//         TextButton(
+//           onPressed: () {
+//             Navigator.of(ctx).pop();
+//           },
+//           child: Container(
+//             color: Colors.green,
+//             padding: const EdgeInsets.all(14),
+//             child: const Text("okay"),
+//           ),
+//         ),
+//       ],
+//     ),
+//   );
+// }
+
+void showMessage(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
     ),
   );
 }

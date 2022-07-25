@@ -37,6 +37,8 @@ dependencies:
   path_provider: ^2.0.11
   file_picker: ^3.0.4
   restart_app: ^1.1.0+1
+  flutter_file_dialog: ^2.3.0
+  intl: ^0.17.0
 
 dev_dependencies:
   flutter_test:

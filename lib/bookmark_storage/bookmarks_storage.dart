@@ -1,7 +1,10 @@
+import 'dart:typed_data';
 import 'package:file_picker/file_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:convert';
 import 'dart:io';
+import 'package:intl/intl.dart';
+import 'package:flutter_file_dialog/flutter_file_dialog.dart';
 
 class BookMarkStorage {
   Map<String, dynamic> setOfBookmarks = {
@@ -64,12 +67,6 @@ class BookMarkStorage {
       try {
         PlatformFile pFile = result.files.first;
 
-        print(pFile.name);
-        print(pFile.bytes);
-        print(pFile.size);
-        print(pFile.extension);
-        print(pFile.path);
-
         File file = File(pFile.path!);
         String content = file.readAsStringSync();
 
@@ -82,5 +79,31 @@ class BookMarkStorage {
     } else {
       return false;
     }
+  }
+
+  Future<bool> exportData() async {
+    Map<String, dynamic> data = setOfBookmarks;
+    String exportData = jsonEncode(data);
+
+    var dateFormat = DateFormat('yyyy-MM-dd');
+    var fileName = 'dir_book-${dateFormat.format(DateTime.now())}.json';
+
+    var path = await FlutterFileDialog.saveFile(
+        params: SaveFileDialogParams(
+            fileName: fileName,
+            data: Uint8List.fromList(utf8.encode(exportData))));
+
+    // if (path != null) {
+    //   final file = File(path);
+    //   // Writing again
+    //   await file.writeAsString(exportData);
+    // }
+
+    // final file = File(path!);
+
+    // Write the file
+    // await file.writeAsString(exportData);
+
+    return path != null;
   }
 }
