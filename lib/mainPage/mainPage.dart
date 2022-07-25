@@ -45,15 +45,15 @@ class _MainPageState extends State<MainPage> {
           ListTile(
             title: const Text('Import'),
             onTap: () async {
-              print(
-                  "Here importing starts-------------------------------------------------------------------------------------------------------------");
+              // print(
+              // "Here importing starts-------------------------------------------------------------------------------------------------------------");
 
               bool sucess = await BookMarkStorage().importData();
 
               if (sucess) {
-                // Restart.restartApp();
-                print(
-                    "Here app should be restarted-----------------------------------------------------------------------------------------------------------------------------");
+                Restart.restartApp();
+                // print(
+                //     "Here app should be restarted-----------------------------------------------------------------------------------------------------------------------------");
               } else {
                 // await importExportDialog(
                 //     context,
