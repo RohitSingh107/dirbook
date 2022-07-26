@@ -1,6 +1,8 @@
 import 'package:dir_book/bookmark_storage/bookmarks_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:restart_app/restart_app.dart';
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class MainPage extends StatefulWidget {
   Map<String, dynamic> bm;
@@ -29,7 +31,10 @@ class _MainPageState extends State<MainPage> {
 
           return check
               ? bookmarkTile(context, widget.bm, listOfItems, index)
-              : directoryTile(context, widget.bm, listOfItems, index);
+              : DirectoryTile(
+                  bm: widget.bm, listOfItems: listOfItems, index: index);
+
+          // : directoryTile(context, widget.bm, listOfItems, index);
         },
       ),
       drawer: Drawer(
@@ -86,25 +91,102 @@ class _MainPageState extends State<MainPage> {
           ),
         ],
       )),
+      floatingActionButton: SpeedDial(
+        animatedIcon: AnimatedIcons.add_event,
+        children: [
+          SpeedDialChild(
+            child: const Icon(Icons.folder),
+            label: "Add Folder",
+            backgroundColor: Colors.red,
+            onTap: () {
+              print("Add Folder clicked");
+              setState(() {
+                Map<String, dynamic> emptyFolder = {};
+                widget.bm.addEntries({"New dir": emptyFolder}.entries);
+
+                print("printing local bm");
+                print(widget.bm);
+
+                print("printing original bm");
+                print(BookMarkStorage().setOfBookmarks);
+                BookMarkStorage().saveToStorage();
+              });
+            },
+          ),
+          SpeedDialChild(
+            child: const Icon(Icons.add_link),
+            label: "Add Bookmark",
+            backgroundColor: Colors.green,
+            onTap: () {
+              print("Add link button clicked");
+              setState(() {
+                widget.bm.addEntries({"New b": "newb link"}.entries);
+
+                print("printing local bm");
+                print(widget.bm);
+
+                print("printing original bm");
+                print(BookMarkStorage().setOfBookmarks);
+                BookMarkStorage().saveToStorage();
+              });
+            },
+          )
+        ],
+      ),
     );
   }
 }
 
-ListTile directoryTile(BuildContext context, Map<String, dynamic> bm,
-    List<String> listOfItems, int index) {
-  return ListTile(
-    title: Text(listOfItems[index]),
-    leading: const Icon(Icons.folder),
-    onTap: () {
-      Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return MainPage(
-          bm: bm[listOfItems[index]],
-          parentRoot: listOfItems[index],
-        );
-      }));
-    },
-    subtitle: Text(bm[listOfItems[index]].length.toString()),
-  );
+// ListTile directoryTile(BuildContext context, Map<String, dynamic> bm,
+//     List<String> listOfItems, int index) {
+//   return ListTile(
+//     title: Text(listOfItems[index]),
+//     leading: const Icon(Icons.folder),
+//     onTap: () {
+//       Navigator.push(context, MaterialPageRoute(builder: (context) {
+//         return MainPage(
+//           bm: bm[listOfItems[index]],
+//           parentRoot: listOfItems[index],
+//         );
+//       }));
+//     },
+//     subtitle: Text(bm[listOfItems[index]].length.toString()),
+//   );
+// }
+
+class DirectoryTile extends StatefulWidget {
+  Map<String, dynamic> bm;
+  List<String> listOfItems;
+  int index;
+
+  DirectoryTile(
+      {Key? key,
+      required this.bm,
+      required this.listOfItems,
+      required this.index})
+      : super(key: key);
+  @override
+  _DirectoryTileState createState() => _DirectoryTileState();
+}
+
+class _DirectoryTileState extends State<DirectoryTile> {
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      title: Text(widget.listOfItems[widget.index]),
+      leading: const Icon(Icons.folder),
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) {
+          return MainPage(
+            bm: widget.bm[widget.listOfItems[widget.index]],
+            parentRoot: widget.listOfItems[widget.index],
+          );
+        }));
+      },
+      subtitle:
+          Text(widget.bm[widget.listOfItems[widget.index]].length.toString()),
+    );
+  }
 }
 
 ListTile bookmarkTile(BuildContext context, Map<String, dynamic> bm,
@@ -112,7 +194,11 @@ ListTile bookmarkTile(BuildContext context, Map<String, dynamic> bm,
   return ListTile(
     title: Text(listOfItems[index]),
     leading: const Icon(Icons.link),
-    onTap: () {},
+    onTap: () async {
+      final url = bm[listOfItems[index]].toString();
+      final uri = Uri.parse(url);
+      await _launchInBrowser(uri);
+    },
     subtitle: Text(bm[listOfItems[index]].toString()),
   );
 }
@@ -146,4 +232,13 @@ void showMessage(BuildContext context, String message) {
       content: Text(message),
     ),
   );
+}
+
+Future<void> _launchInBrowser(Uri url) async {
+  if (!await launchUrl(
+    url,
+    mode: LaunchMode.externalApplication,
+  )) {
+    throw 'Could not launch $url';
+  }
 }

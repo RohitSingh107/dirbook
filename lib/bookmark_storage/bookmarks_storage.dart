@@ -57,6 +57,14 @@ class BookMarkStorage {
     return file.writeAsString(content);
   }
 
+  void saveToStorage() async {
+    final file = await _localFile;
+    String content = jsonEncode(setOfBookmarks);
+
+    // Write the file
+    file.writeAsStringSync(content);
+  }
+
   Future<bool> importData() async {
     FilePickerResult? result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
