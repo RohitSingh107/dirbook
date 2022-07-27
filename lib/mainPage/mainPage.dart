@@ -30,11 +30,11 @@ class _MainPageState extends State<MainPage> {
           bool check = widget.bm[listOfItems[index]].runtimeType == String;
 
           return check
-              ? bookmarkTile(context, widget.bm, listOfItems, index)
-              : DirectoryTile(
-                  bm: widget.bm, listOfItems: listOfItems, index: index);
+              ? bookmarkWidget(context, widget.bm, listOfItems, index)
+              // : DirectoryTile(
+              //     bm: widget.bm, listOfItems: listOfItems, index: index);
 
-          // : directoryTile(context, widget.bm, listOfItems, index);
+              : directoryTile(context, widget.bm, listOfItems, index);
         },
       ),
       drawer: Drawer(
@@ -60,10 +60,6 @@ class _MainPageState extends State<MainPage> {
                 // print(
                 //     "Here app should be restarted-----------------------------------------------------------------------------------------------------------------------------");
               } else {
-                // await importExportDialog(
-                //     context,
-                //     "Import Failed",
-                //     "Please select a valid json file");
                 showMessage(context,
                     "Import Failed! Please select a valid json file"); // This might cause issues -------------------------------------------------------------------
               }
@@ -98,37 +94,43 @@ class _MainPageState extends State<MainPage> {
             child: const Icon(Icons.folder),
             label: "Add Folder",
             backgroundColor: Colors.red,
-            onTap: () {
-              print("Add Folder clicked");
-              setState(() {
+            onTap: () async {
+              TextEditingController folderController = TextEditingController();
+              await openDialogForFolder(context, folderController);
+
+              String val = folderController.text;
+
+              if (val.isNotEmpty) {
                 Map<String, dynamic> emptyFolder = {};
-                widget.bm.addEntries({"New dir": emptyFolder}.entries);
+                widget.bm.addEntries({val: emptyFolder}.entries);
 
-                print("printing local bm");
-                print(widget.bm);
-
-                print("printing original bm");
-                print(BookMarkStorage().setOfBookmarks);
                 BookMarkStorage().saveToStorage();
-              });
+              }
+
+              setState(() {});
             },
           ),
           SpeedDialChild(
             child: const Icon(Icons.add_link),
             label: "Add Bookmark",
             backgroundColor: Colors.green,
-            onTap: () {
-              print("Add link button clicked");
-              setState(() {
-                widget.bm.addEntries({"New b": "newb link"}.entries);
+            onTap: () async {
+              TextEditingController nameController = TextEditingController();
 
-                print("printing local bm");
-                print(widget.bm);
+              TextEditingController linkController = TextEditingController();
+              await openDialogForBookmark(
+                  context, nameController, linkController);
 
-                print("printing original bm");
-                print(BookMarkStorage().setOfBookmarks);
+              String nameVal = nameController.text;
+              String linkVal = linkController.text;
+
+              if ((nameVal.isNotEmpty) && (linkVal.isNotEmpty)) {
+                widget.bm.addEntries({nameVal: linkVal}.entries);
+
                 BookMarkStorage().saveToStorage();
-              });
+              }
+
+              setState(() {});
             },
           )
         ],
@@ -137,69 +139,93 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
-// ListTile directoryTile(BuildContext context, Map<String, dynamic> bm,
-//     List<String> listOfItems, int index) {
-//   return ListTile(
-//     title: Text(listOfItems[index]),
-//     leading: const Icon(Icons.folder),
-//     onTap: () {
-//       Navigator.push(context, MaterialPageRoute(builder: (context) {
-//         return MainPage(
-//           bm: bm[listOfItems[index]],
-//           parentRoot: listOfItems[index],
-//         );
-//       }));
-//     },
-//     subtitle: Text(bm[listOfItems[index]].length.toString()),
-//   );
-// }
-
-class DirectoryTile extends StatefulWidget {
-  Map<String, dynamic> bm;
-  List<String> listOfItems;
-  int index;
-
-  DirectoryTile(
-      {Key? key,
-      required this.bm,
-      required this.listOfItems,
-      required this.index})
-      : super(key: key);
-  @override
-  _DirectoryTileState createState() => _DirectoryTileState();
-}
-
-class _DirectoryTileState extends State<DirectoryTile> {
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      title: Text(widget.listOfItems[widget.index]),
-      leading: const Icon(Icons.folder),
-      onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return MainPage(
-            bm: widget.bm[widget.listOfItems[widget.index]],
-            parentRoot: widget.listOfItems[widget.index],
-          );
-        }));
-      },
-      subtitle:
-          Text(widget.bm[widget.listOfItems[widget.index]].length.toString()),
-    );
-  }
-}
-
-ListTile bookmarkTile(BuildContext context, Map<String, dynamic> bm,
+Widget directoryTile(BuildContext context, Map<String, dynamic> bm,
     List<String> listOfItems, int index) {
   return ListTile(
     title: Text(listOfItems[index]),
-    leading: const Icon(Icons.link),
+    leading: const Icon(Icons.folder),
+    onTap: () {
+      Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return MainPage(
+          bm: bm[listOfItems[index]],
+          parentRoot: listOfItems[index],
+        );
+      }));
+    },
+    subtitle: Text(bm[listOfItems[index]].length.toString()),
+  );
+}
+
+// class DirectoryTile extends StatefulWidget {
+//   Map<String, dynamic> bm;
+//   List<String> listOfItems;
+//   int index;
+
+//   DirectoryTile(
+//       {Key? key,
+//       required this.bm,
+//       required this.listOfItems,
+//       required this.index})
+//       : super(key: key);
+//   @override
+//   _DirectoryTileState createState() => _DirectoryTileState();
+// }
+
+// class _DirectoryTileState extends State<DirectoryTile> {
+//   @override
+//   Widget build(BuildContext context) {
+//     return ListTile(
+//       title: Text(widget.listOfItems[widget.index]),
+//       leading: const Icon(Icons.folder),
+//       onTap: () {
+//         Navigator.push(context, MaterialPageRoute(builder: (context) {
+//           return MainPage(
+//             bm: widget.bm[widget.listOfItems[widget.index]],
+//             parentRoot: widget.listOfItems[widget.index],
+//           );
+//         }));
+//       },
+//       subtitle:
+//           Text(widget.bm[widget.listOfItems[widget.index]].length.toString()),
+//     );
+//   }
+// }
+
+Widget bookmarkWidget(BuildContext context, Map<String, dynamic> bm,
+    List<String> listOfItems, int index) {
+  return InkWell(
+    onLongPress: () {
+      print("Bookmark is long pressed");
+      //   // TODO:  <27-07-22, yourname> //
+      //   // Update the item
+    },
     onTap: () async {
       final url = bm[listOfItems[index]].toString();
       final uri = Uri.parse(url);
       await _launchInBrowser(uri);
     },
-    subtitle: Text(bm[listOfItems[index]].toString()),
+    child: Dismissible(
+      direction: DismissDirection.endToStart,
+      key: ValueKey<String>(bm[listOfItems[index]].toString()),
+      background: Container(
+        color: Colors.red,
+        child: const Icon(Icons.delete_forever),
+      ),
+      onDismissed: (DismissDirection direction) async {
+        // TODO:  <27-07-22, yourname> //
+        // Deleting bookmark
+        // print(listOfItems[index]);
+        bm.remove(listOfItems[index]);
+        await BookMarkStorage().saveToStorage();
+      },
+      child: Card(
+        child: ListTile(
+          title: Text(listOfItems[index]),
+          leading: const Icon(Icons.link),
+          subtitle: Text(bm[listOfItems[index]].toString()),
+        ),
+      ),
+    ),
   );
 }
 
@@ -241,4 +267,66 @@ Future<void> _launchInBrowser(Uri url) async {
   )) {
     throw 'Could not launch $url';
   }
+}
+
+Future<void> openDialogForFolder(
+    BuildContext context, TextEditingController folderController) {
+  return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+            title: const Text("Create a Folder"),
+            content: TextField(
+              controller: folderController,
+              autofocus: true,
+              decoration: const InputDecoration(hintText: "Name of Folder"),
+            ),
+            actions: [
+              TextButton(
+                child: const Text("SUBMIT"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          ));
+}
+
+Future<void> openDialogForBookmark(
+    BuildContext context,
+    TextEditingController nameController,
+    TextEditingController linkController) {
+  return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+            title: const Text("Create a Bookmark"),
+            content: Container(
+              height: 100,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    autofocus: true,
+                    decoration:
+                        const InputDecoration(hintText: "Name of Bookmark"),
+                  ),
+                  TextField(
+                    controller: linkController,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                        hintText: "https//www.example.com"),
+                  )
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                child: const Text("SUBMIT"),
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+              )
+            ],
+          ));
 }

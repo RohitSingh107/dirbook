@@ -57,12 +57,12 @@ class BookMarkStorage {
     return file.writeAsString(content);
   }
 
-  void saveToStorage() async {
+  Future<void> saveToStorage() async {
     final file = await _localFile;
     String content = jsonEncode(setOfBookmarks);
 
     // Write the file
-    file.writeAsStringSync(content);
+    await file.writeAsString(content);
   }
 
   Future<bool> importData() async {
