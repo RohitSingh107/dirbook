@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:dir_book/bookmark_storage/bookmarks_storage.dart';
 import 'package:dir_book/mainPage/mainPage.dart';
+import 'package:dir_book/theme/themes.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -15,10 +16,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      themeMode: ThemeMode.dark,
+      theme: MyTheme.lightTheme(context),
+      darkTheme: MyTheme.darkTheme(context),
       title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.purple,
-      ),
       home: MyHomePage(
         bmStorage: BookMarkStorage(),
       ),

@@ -141,9 +141,11 @@ class _MainPageState extends State<MainPage> {
 
 Widget directoryTile(BuildContext context, Map<String, dynamic> bm,
     List<String> listOfItems, int index) {
-  return ListTile(
-    title: Text(listOfItems[index]),
-    leading: const Icon(Icons.folder),
+  return InkWell(
+    onLongPress: () {
+      // TODO:  <27-07-22, yourname> //
+      // Update directory
+    },
     onTap: () {
       Navigator.push(context, MaterialPageRoute(builder: (context) {
         return MainPage(
@@ -152,50 +154,20 @@ Widget directoryTile(BuildContext context, Map<String, dynamic> bm,
         );
       }));
     },
-    subtitle: Text(bm[listOfItems[index]].length.toString()),
+    child: Card(
+      child: ListTile(
+        title: Text(listOfItems[index]),
+        leading: const Icon(Icons.folder),
+        subtitle: Text(bm[listOfItems[index]].length.toString()),
+      ),
+    ),
   );
 }
-
-// class DirectoryTile extends StatefulWidget {
-//   Map<String, dynamic> bm;
-//   List<String> listOfItems;
-//   int index;
-
-//   DirectoryTile(
-//       {Key? key,
-//       required this.bm,
-//       required this.listOfItems,
-//       required this.index})
-//       : super(key: key);
-//   @override
-//   _DirectoryTileState createState() => _DirectoryTileState();
-// }
-
-// class _DirectoryTileState extends State<DirectoryTile> {
-//   @override
-//   Widget build(BuildContext context) {
-//     return ListTile(
-//       title: Text(widget.listOfItems[widget.index]),
-//       leading: const Icon(Icons.folder),
-//       onTap: () {
-//         Navigator.push(context, MaterialPageRoute(builder: (context) {
-//           return MainPage(
-//             bm: widget.bm[widget.listOfItems[widget.index]],
-//             parentRoot: widget.listOfItems[widget.index],
-//           );
-//         }));
-//       },
-//       subtitle:
-//           Text(widget.bm[widget.listOfItems[widget.index]].length.toString()),
-//     );
-//   }
-// }
 
 Widget bookmarkWidget(BuildContext context, Map<String, dynamic> bm,
     List<String> listOfItems, int index) {
   return InkWell(
     onLongPress: () {
-      print("Bookmark is long pressed");
       //   // TODO:  <27-07-22, yourname> //
       //   // Update the item
     },
@@ -212,9 +184,6 @@ Widget bookmarkWidget(BuildContext context, Map<String, dynamic> bm,
         child: const Icon(Icons.delete_forever),
       ),
       onDismissed: (DismissDirection direction) async {
-        // TODO:  <27-07-22, yourname> //
-        // Deleting bookmark
-        // print(listOfItems[index]);
         bm.remove(listOfItems[index]);
         await BookMarkStorage().saveToStorage();
       },
@@ -299,7 +268,7 @@ Future<void> openDialogForBookmark(
       context: context,
       builder: (context) => AlertDialog(
             title: const Text("Create a Bookmark"),
-            content: Container(
+            content: SizedBox(
               height: 100,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
