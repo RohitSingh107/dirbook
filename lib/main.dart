@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:dir_book/bookmark_storage/bookmarks_storage.dart';
@@ -10,17 +11,13 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  Widget root = await routeToCorrectPage();
-  runApp(MyApp(
-    home: root,
-  ));
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  Widget? home;
-  MyApp({Key? key, required this.home}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
 
-  //This widget is the root of your application.
+  //This widget is the root of My application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -28,10 +25,7 @@ class MyApp extends StatelessWidget {
       theme: MyTheme.lightTheme(context),
       darkTheme: MyTheme.darkTheme(context),
       title: 'Flutter Demo',
-      // home: MyHomePage(
-      //   bmStorage: BookMarkStorage(),
-      // ),
-      home: home,
+      home: MyHomePage(bmStorage: BookMarkStorage()),
     );
   }
 }
@@ -44,6 +38,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  late StreamSubscription _intentDataStreamSubscription;
   @override
   void initState() {
     super.initState();
@@ -53,6 +48,39 @@ class _MyHomePageState extends State<MyHomePage> {
         widget.bmStorage.setOfBookmarks = decodedJson;
       });
     });
+
+    //------------------------------------
+
+    //This shared intent work when application is in memory
+    _intentDataStreamSubscription =
+        ReceiveSharingIntent.getTextStream().listen((String value) {
+      Navigator.push(context, MaterialPageRoute(builder: (context) {
+        return SharePage(
+          sharedLink: value,
+        );
+      }));
+    });
+
+    //-----------------------------------------
+
+    // ------------------------------------------------
+    // For sharing or opening urls/text coming from outside the app while the app is closed
+    ReceiveSharingIntent.getInitialText().then((String? value) {
+      if (value != null) {
+        Navigator.push(context, MaterialPageRoute(builder: (context) {
+          return SharePage(
+            sharedLink: value,
+          );
+        }));
+      }
+    });
+    //------------------------------------------------
+
+    @override
+    void dispose() {
+      super.dispose();
+      _intentDataStreamSubscription.cancel();
+    }
   }
 
   @override
@@ -85,11 +113,11 @@ class _SharePageState extends State<SharePage> {
   }
 }
 
-Future<Widget> routeToCorrectPage() async {
-  String? sharedValue = await ReceiveSharingIntent.getInitialText();
-  if (sharedValue != null) {
-    return SharePage(sharedLink: sharedValue);
-  }
+// Future<Widget> routeToCorrectPage() async {
+//   String? sharedValue = await ReceiveSharingIntent.getInitialText();
+//   if (sharedValue != null) {
+//     return SharePage(sharedLink: sharedValue);
+//   }
 
-  return MyHomePage(bmStorage: BookMarkStorage());
-}
+//   return MyHomePage(bmStorage: BookMarkStorage());
+// }
