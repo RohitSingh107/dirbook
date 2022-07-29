@@ -107,7 +107,8 @@ class _SharePageState extends State<SharePage> {
         title: const Text("Share link"),
       ),
       body: Container(
-        child: Text("Shared Link is ${widget.sharedLink}"),
+        child: Text(
+            "Shared Link is ${widget.sharedLink} \n\n This feature is currently under developement, please wait few days :)"),
       ),
     );
   }

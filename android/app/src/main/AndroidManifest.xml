@@ -1,7 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="dev.dir_book.dir_book">
    <application
-        android:label="dir_book"
+        android:label="Bookmark Manager Beta"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity

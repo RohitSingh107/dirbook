@@ -18,25 +18,46 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   @override
   Widget build(BuildContext context) {
+    List<String> listOfAllItems = widget.bm.keys.toList()..sort();
+    List<String> listOfDirectories = <String>[];
+    List<String> listOfBookmarks = <String>[];
+
+    for (String element in listOfAllItems) {
+      if (widget.bm[element].runtimeType == String) {
+        listOfBookmarks.add(element);
+      } else {
+        listOfDirectories.add(element);
+      }
+    }
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.parentRoot),
       ),
-      body: ListView.builder(
-        itemCount: widget.bm.length,
-        itemBuilder: (BuildContext context, int index) {
-          List<String> listOfItems = widget.bm.keys.toList()..sort();
-
-          bool check = widget.bm[listOfItems[index]].runtimeType == String;
-
-          return check
-              ? BookMarkTile(
-                  bm: widget.bm,
-                  bookMarkName: listOfItems[index],
-                  bookMarkLink: widget.bm[listOfItems[index]].toString())
-              : FolderTile(bm: widget.bm, folderName: listOfItems[index]);
-          // : directoryTile(context, widget.bm, listOfItems, index);
-        },
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            ListView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: listOfDirectories.length,
+              itemBuilder: (BuildContext context, int index) {
+                return FolderTile(
+                    bm: widget.bm, folderName: listOfDirectories[index]);
+              },
+            ),
+            ListView.builder(
+              physics: const NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              itemCount: listOfBookmarks.length,
+              itemBuilder: (BuildContext context, int index) {
+                return BookMarkTile(
+                    bm: widget.bm,
+                    bookMarkName: listOfBookmarks[index],
+                    bookMarkLink: widget.bm[listOfBookmarks[index]].toString());
+              },
+            )
+          ],
+        ),
       ),
       drawer: Drawer(
           child: ListView(
@@ -46,7 +67,7 @@ class _MainPageState extends State<MainPage> {
             decoration: BoxDecoration(
               color: Colors.blue,
             ),
-            child: Text('Drawer Header'),
+            child: Text('Bookmark Manager (Beta)'),
           ),
           ListTile(
             title: const Text('Import'),
@@ -159,10 +180,6 @@ class _FolderTileState extends State<FolderTile> {
   Widget build(BuildContext context) {
     return InkWell(
       onLongPress: () async {
-        // TODO:  <27-07-22, yourname> //
-        // Update directory
-        //-----------------------------------------------
-
         TextEditingController folderController = TextEditingController();
         final String oldFolderName = widget.folderName;
         folderController.text = oldFolderName;
@@ -184,7 +201,6 @@ class _FolderTileState extends State<FolderTile> {
             widget.folderName = folderNameVal;
           }
         });
-        //----------------------------------------------
       },
       onTap: () {
         Navigator.push(context, MaterialPageRoute(builder: (context) {
