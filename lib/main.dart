@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:dir_book/bookmark_storage/bookmarks_storage.dart';
-import 'package:dir_book/mainPage/mainPage.dart';
+import 'package:dir_book/pages/mainPage.dart';
 import 'package:dir_book/theme/themes.dart';
+
 import 'package:flutter/material.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
@@ -11,11 +11,11 @@ import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  MyApp({Key? key}) : super(key: key);
+  const MyApp({Key? key}) : super(key: key);
 
   //This widget is the root of My application.
   @override
@@ -94,7 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class SharePage extends StatefulWidget {
   final String sharedLink;
-  SharePage({super.key, required this.sharedLink});
+  const SharePage({super.key, required this.sharedLink});
   @override
   _SharePageState createState() => _SharePageState();
 }
@@ -112,12 +112,3 @@ class _SharePageState extends State<SharePage> {
     );
   }
 }
-
-// Future<Widget> routeToCorrectPage() async {
-//   String? sharedValue = await ReceiveSharingIntent.getInitialText();
-//   if (sharedValue != null) {
-//     return SharePage(sharedLink: sharedValue);
-//   }
-
-//   return MyHomePage(bmStorage: BookMarkStorage());
-// }

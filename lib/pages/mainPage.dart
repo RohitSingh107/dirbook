@@ -25,16 +25,17 @@ class _MainPageState extends State<MainPage> {
       body: ListView.builder(
         itemCount: widget.bm.length,
         itemBuilder: (BuildContext context, int index) {
-          List<String> listOfItems = widget.bm.keys.toList();
+          List<String> listOfItems = widget.bm.keys.toList()..sort();
 
           bool check = widget.bm[listOfItems[index]].runtimeType == String;
 
           return check
-              ? bookmarkWidget(context, widget.bm, listOfItems, index)
-              // : DirectoryTile(
-              //     bm: widget.bm, listOfItems: listOfItems, index: index);
-
-              : directoryTile(context, widget.bm, listOfItems, index);
+              ? BookMarkTile(
+                  bm: widget.bm,
+                  bookMarkName: listOfItems[index],
+                  bookMarkLink: widget.bm[listOfItems[index]].toString())
+              : FolderTile(bm: widget.bm, folderName: listOfItems[index]);
+          // : directoryTile(context, widget.bm, listOfItems, index);
         },
       ),
       drawer: Drawer(
@@ -96,7 +97,8 @@ class _MainPageState extends State<MainPage> {
             backgroundColor: Colors.red,
             onTap: () async {
               TextEditingController folderController = TextEditingController();
-              await openDialogForFolder(context, folderController);
+              await openDialogForFolder(
+                  context: context, folderController: folderController);
 
               String val = folderController.text;
 
@@ -104,7 +106,7 @@ class _MainPageState extends State<MainPage> {
                 Map<String, dynamic> emptyFolder = {};
                 widget.bm.addEntries({val: emptyFolder}.entries);
 
-                BookMarkStorage().saveToStorage();
+                await BookMarkStorage().saveToStorage();
               }
 
               setState(() {});
@@ -119,7 +121,9 @@ class _MainPageState extends State<MainPage> {
 
               TextEditingController linkController = TextEditingController();
               await openDialogForBookmark(
-                  context, nameController, linkController);
+                  context: context,
+                  nameController: nameController,
+                  linkController: linkController);
 
               String nameVal = nameController.text;
               String linkVal = linkController.text;
@@ -127,7 +131,7 @@ class _MainPageState extends State<MainPage> {
               if ((nameVal.isNotEmpty) && (linkVal.isNotEmpty)) {
                 widget.bm.addEntries({nameVal: linkVal}.entries);
 
-                BookMarkStorage().saveToStorage();
+                await BookMarkStorage().saveToStorage();
               }
 
               setState(() {});
@@ -139,63 +143,144 @@ class _MainPageState extends State<MainPage> {
   }
 }
 
-Widget directoryTile(BuildContext context, Map<String, dynamic> bm,
-    List<String> listOfItems, int index) {
-  return InkWell(
-    onLongPress: () {
-      // TODO:  <27-07-22, yourname> //
-      // Update directory
-    },
-    onTap: () {
-      Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return MainPage(
-          bm: bm[listOfItems[index]],
-          parentRoot: listOfItems[index],
-        );
-      }));
-    },
-    child: Card(
-      child: ListTile(
-        title: Text(listOfItems[index]),
-        leading: const Icon(Icons.folder),
-        subtitle: Text(bm[listOfItems[index]].length.toString()),
-      ),
-    ),
-  );
+class FolderTile extends StatefulWidget {
+  Map<String, dynamic> bm;
+  String folderName;
+
+  FolderTile({Key? key, required this.bm, required this.folderName})
+      : super(key: key);
+
+  @override
+  _FolderTileState createState() => _FolderTileState();
 }
 
-Widget bookmarkWidget(BuildContext context, Map<String, dynamic> bm,
-    List<String> listOfItems, int index) {
-  return InkWell(
-    onLongPress: () {
-      //   // TODO:  <27-07-22, yourname> //
-      //   // Update the item
-    },
-    onTap: () async {
-      final url = bm[listOfItems[index]].toString();
-      final uri = Uri.parse(url);
-      await _launchInBrowser(uri);
-    },
-    child: Dismissible(
-      direction: DismissDirection.endToStart,
-      key: ValueKey<String>(bm[listOfItems[index]].toString()),
-      background: Container(
-        color: Colors.red,
-        child: const Icon(Icons.delete_forever),
-      ),
-      onDismissed: (DismissDirection direction) async {
-        bm.remove(listOfItems[index]);
-        await BookMarkStorage().saveToStorage();
+class _FolderTileState extends State<FolderTile> {
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onLongPress: () async {
+        // TODO:  <27-07-22, yourname> //
+        // Update directory
+        //-----------------------------------------------
+
+        TextEditingController folderController = TextEditingController();
+        final String oldFolderName = widget.folderName;
+        folderController.text = oldFolderName;
+
+        await openDialogForFolder(
+            context: context, folderController: folderController);
+
+        String folderNameVal = folderController.text;
+
+        if ((folderNameVal.isNotEmpty) && !(folderNameVal == oldFolderName)) {
+          Map<String, dynamic> storeVal = widget.bm[widget.folderName];
+
+          widget.bm.addEntries({folderNameVal: storeVal}.entries);
+          widget.bm.remove(oldFolderName);
+          await BookMarkStorage().saveToStorage();
+        }
+        setState(() {
+          if (folderNameVal.isNotEmpty) {
+            widget.folderName = folderNameVal;
+          }
+        });
+        //----------------------------------------------
+      },
+      onTap: () {
+        Navigator.push(context, MaterialPageRoute(builder: (context) {
+          return MainPage(
+            bm: widget.bm[widget.folderName],
+            parentRoot: widget.folderName,
+          );
+        }));
       },
       child: Card(
         child: ListTile(
-          title: Text(listOfItems[index]),
-          leading: const Icon(Icons.link),
-          subtitle: Text(bm[listOfItems[index]].toString()),
+          title: Text(widget.folderName),
+          leading: const Icon(Icons.folder),
+          subtitle: Text(widget.bm[widget.folderName].length.toString()),
         ),
       ),
-    ),
-  );
+    );
+  }
+}
+
+class BookMarkTile extends StatefulWidget {
+  Map<String, dynamic> bm;
+  String bookMarkName;
+  String bookMarkLink;
+  BookMarkTile(
+      {Key? key,
+      required this.bm,
+      required this.bookMarkName,
+      required this.bookMarkLink})
+      : super(key: key);
+
+  @override
+  State<BookMarkTile> createState() => _BookMarkTileState();
+}
+
+class _BookMarkTileState extends State<BookMarkTile> {
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onLongPress: () async {
+        TextEditingController nameController = TextEditingController();
+        final String oldname = widget.bookMarkName;
+        nameController.text = oldname;
+
+        TextEditingController linkController = TextEditingController();
+        final String oldlink = widget.bookMarkLink;
+        linkController.text = oldlink;
+
+        await openDialogForBookmark(
+            context: context,
+            nameController: nameController,
+            linkController: linkController);
+
+        String nameVal = nameController.text;
+        String linkVal = linkController.text;
+
+        if ((nameVal.isNotEmpty) &&
+            (linkVal.isNotEmpty) &&
+            (!(nameVal == oldname) || !(linkVal == oldlink))) {
+          widget.bm.addEntries({nameVal: linkVal}.entries);
+          widget.bm.remove(widget.bookMarkName);
+          await BookMarkStorage().saveToStorage();
+        }
+        setState(() {
+          if ((nameVal.isNotEmpty) && (linkVal.isNotEmpty)) {
+            widget.bookMarkLink = linkVal;
+            widget.bookMarkName = nameVal;
+          }
+        });
+      },
+      onTap: () async {
+        final url = widget.bookMarkLink;
+        final uri = Uri.parse(url);
+        await _launchInBrowser(uri);
+      },
+      child: Dismissible(
+        direction: DismissDirection.endToStart,
+        key: ValueKey<String>(widget.bookMarkName),
+        background: Container(
+          color: Colors.red,
+          child: const Icon(Icons.delete_forever),
+        ),
+        onDismissed: (DismissDirection direction) async {
+          widget.bm.remove(widget.bookMarkName);
+          await BookMarkStorage().saveToStorage();
+        },
+        child: Card(
+          child: ListTile(
+            title: Text(widget.bookMarkName),
+            leading: const Icon(Icons.link),
+            subtitle: Text(widget.bookMarkLink),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // Future<dynamic> importExportDialog(
@@ -239,7 +324,8 @@ Future<void> _launchInBrowser(Uri url) async {
 }
 
 Future<void> openDialogForFolder(
-    BuildContext context, TextEditingController folderController) {
+    {required BuildContext context,
+    required TextEditingController folderController}) {
   return showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -261,9 +347,9 @@ Future<void> openDialogForFolder(
 }
 
 Future<void> openDialogForBookmark(
-    BuildContext context,
-    TextEditingController nameController,
-    TextEditingController linkController) {
+    {required BuildContext context,
+    required TextEditingController nameController,
+    required TextEditingController linkController}) {
   return showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -283,8 +369,8 @@ Future<void> openDialogForBookmark(
                   TextField(
                     controller: linkController,
                     autofocus: true,
-                    decoration: const InputDecoration(
-                        hintText: "https//www.example.com"),
+                    decoration:
+                        const InputDecoration(hintText: "www.example.com"),
                   )
                 ],
               ),
