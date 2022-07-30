@@ -210,11 +210,23 @@ class _FolderTileState extends State<FolderTile> {
           );
         }));
       },
-      child: Card(
-        child: ListTile(
-          title: Text(widget.folderName),
-          leading: const Icon(Icons.folder),
-          subtitle: Text(widget.bm[widget.folderName].length.toString()),
+      child: Dismissible(
+        direction: DismissDirection.endToStart,
+        key: ValueKey<String>(widget.folderName),
+        background: Container(
+          color: Colors.red,
+          child: const Icon(Icons.delete_forever),
+        ),
+        onDismissed: (DismissDirection direction) async {
+          widget.bm.remove(widget.folderName);
+          await BookMarkStorage().saveToStorage();
+        },
+        child: Card(
+          child: ListTile(
+            title: Text(widget.folderName),
+            leading: const Icon(Icons.folder),
+            subtitle: Text(widget.bm[widget.folderName].length.toString()),
+          ),
         ),
       ),
     );
