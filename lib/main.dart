@@ -1,16 +1,19 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:dir_book/bookmark_storage/bookmarks_storage.dart';
+import 'package:dir_book/pages/folderSelect.dart';
 import 'package:dir_book/pages/mainPage.dart';
 import 'package:dir_book/theme/themes.dart';
-
 import 'package:flutter/material.dart';
 import 'package:receive_sharing_intent/receive_sharing_intent.dart';
 
-// Widget? root;
+late final String jsonString;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  jsonString = await BookMarkStorage().readStorage();
+
   runApp(const MyApp());
 }
 
@@ -42,34 +45,43 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   void initState() {
     super.initState();
-    widget.bmStorage.readStorage().then((value) {
-      setState(() {
-        Map<String, dynamic> decodedJson = jsonDecode(value);
-        widget.bmStorage.setOfBookmarks = decodedJson;
-      });
-    });
 
+//     widget.bmStorage.readStorage().then((value) {
+//       setState(() {
+//         Map<String, dynamic> decodedJson = jsonDecode(value);
+//         widget.bmStorage.setOfBookmarks = decodedJson;
+//       });
+//     });
+    setState(() {
+      Map<String, dynamic> decodedJson = jsonDecode(jsonString);
+      widget.bmStorage.setOfBookmarks = decodedJson;
+    });
     //------------------------------------
 
     //This shared intent work when application is in memory
     _intentDataStreamSubscription =
         ReceiveSharingIntent.getTextStream().listen((String value) {
       Navigator.push(context, MaterialPageRoute(builder: (context) {
-        return SharePage(
-          sharedLink: value,
+        return FolderSelect(
+          bm: BookMarkStorage().setOfBookmarks,
+          parentRoot: "/",
+          paste: false,
+          link: value,
         );
       }));
     });
-
-    //-----------------------------------------
 
     // ------------------------------------------------
     // For sharing or opening urls/text coming from outside the app while the app is closed
     ReceiveSharingIntent.getInitialText().then((String? value) {
       if (value != null) {
+        // print("S link is ${value}");
         Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return SharePage(
-            sharedLink: value,
+          return FolderSelect(
+            bm: BookMarkStorage().setOfBookmarks,
+            parentRoot: "/",
+            paste: false,
+            link: value,
           );
         }));
       }
@@ -88,28 +100,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return MainPage(
       bm: widget.bmStorage.setOfBookmarks,
       parentRoot: "/",
-    );
-  }
-}
-
-class SharePage extends StatefulWidget {
-  final String sharedLink;
-  const SharePage({super.key, required this.sharedLink});
-  @override
-  _SharePageState createState() => _SharePageState();
-}
-
-class _SharePageState extends State<SharePage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text("Share link"),
-      ),
-      body: Container(
-        child: Text(
-            "Shared Link is ${widget.sharedLink} \n\n This feature is currently under developement, please wait few days :)"),
-      ),
     );
   }
 }

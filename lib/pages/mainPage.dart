@@ -299,29 +299,6 @@ class _BookMarkTileState extends State<BookMarkTile> {
   }
 }
 
-// Future<dynamic> importExportDialog(
-//     BuildContext context, String title, String content) {
-//   return showDialog(
-//     context: context,
-//     builder: (ctx) => AlertDialog(
-//       title: Text(title),
-//       content: Text(content),
-//       actions: <Widget>[
-//         TextButton(
-//           onPressed: () {
-//             Navigator.of(ctx).pop();
-//           },
-//           child: Container(
-//             color: Colors.green,
-//             padding: const EdgeInsets.all(14),
-//             child: const Text("okay"),
-//           ),
-//         ),
-//       ],
-//     ),
-//   );
-// }
-
 void showMessage(BuildContext context, String message) {
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
