@@ -31,102 +31,142 @@ class _FolderSelect extends State<FolderSelect> {
         listOfDirectories.add(element);
       }
     }
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.parentRoot),
-      ),
-      body: ListView.builder(
-        itemCount: listOfDirectories.length,
-        itemBuilder: (BuildContext context, int index) {
-          return FolderTile(
-              bm: widget.bm,
-              folderName: listOfDirectories[index],
-              paste: widget.paste,
-              link: widget.link);
-        },
-      ),
-      floatingActionButton: Column(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          FloatingActionButton(
-            heroTag: null,
-            tooltip: "New Folder",
-            backgroundColor: Colors.blue,
-            child: const Icon(Icons.create_new_folder),
-            onPressed: () async {
-              TextEditingController folderController = TextEditingController();
-              await openDialogForFolder(
-                  context: context, folderController: folderController);
+    return SafeArea(
+      child: Scaffold(
+        appBar: AppBar(title: Text(widget.parentRoot)),
+        // appBar: !widget.paste
+        //     ? AppBar(
+        //         title: Text(widget.parentRoot),
+        //       )
+        //     : AppBar(
+        //         title: Text(widget.parentRoot),
+        //         actions: <Widget>[
+        //           PopupMenuButton(
+        //             itemBuilder: (BuildContext context) {
+        //               return ["Select", "Edit", "Copy", "Move", "Delete"]
+        //                   .map((String choice) {
+        //                 return PopupMenuItem<String>(
+        //                   value: choice,
+        //                   child: Text(choice),
+        //                 );
+        //               }).toList();
+        //             },
+        //             onSelected: (item) {
+        //               switch (item) {
+        //                 case "Select":
+        //                   print("Select Clicked");
+        //                   break;
+        //                 case "Edit":
+        //                   print("Edit clicked");
+        //                   break;
+        //                 case "Copy":
+        //                   print("Copy clicked");
+        //                   break;
+        //                 case "Delete":
+        //                   print("Delete clicked");
+        //                   break;
+        //                 case "Move":
+        //                   print("Move clicked");
+        //                   break;
+        //               }
+        //             },
+        //           )
+        //         ],
+        //       ),
+        body: ListView.builder(
+          itemCount: listOfDirectories.length,
+          itemBuilder: (BuildContext context, int index) {
+            return FolderTile(
+                bm: widget.bm,
+                folderName: listOfDirectories[index],
+                paste: widget.paste,
+                link: widget.link);
+          },
+        ),
+        floatingActionButton: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            FloatingActionButton(
+              heroTag: null,
+              tooltip: "New Folder",
+              backgroundColor: Colors.blue,
+              child: const Icon(Icons.create_new_folder),
+              onPressed: () async {
+                TextEditingController folderController =
+                    TextEditingController();
+                await openDialogForFolder(
+                    context: context, folderController: folderController);
 
-              String val = folderController.text;
+                String val = folderController.text;
 
-              if (val.isNotEmpty) {
-                Map<String, dynamic> emptyFolder = {};
-                widget.bm.addEntries({val: emptyFolder}.entries);
+                if (val.isNotEmpty) {
+                  Map<String, dynamic> emptyFolder = {};
+                  widget.bm.addEntries({val: emptyFolder}.entries);
 
-                await BookMarkStorage().saveToStorage();
-              }
+                  await BookMarkStorage().saveToStorage();
+                }
 
-              setState(() {});
-            },
-          ),
-          const SizedBox(height: 10),
-          FloatingActionButton(
-            heroTag: null,
-            tooltip: "Select this folder",
-            backgroundColor: Colors.green,
-            child: const Icon(Icons.pin_drop),
-            onPressed: () async {
-              try {
-                print(
-                    "printinf details ---------------------------------------------------------------------------");
-                if (!widget.paste) {
-                  print("Folder name is ${widget.parentRoot}");
-                  print("Shared link is ${widget.link}");
+                setState(() {});
+              },
+            ),
+            const SizedBox(height: 10),
+            FloatingActionButton(
+              heroTag: null,
+              tooltip: "Select this folder",
+              backgroundColor: Colors.green,
+              child: const Icon(Icons.pin_drop),
+              onPressed: () async {
+                try {
+                  print(
+                      "printinf details ---------------------------------------------------------------------------");
+                  if (!widget.paste) {
+                    print("Folder name is ${widget.parentRoot}");
+                    print("Shared link is ${widget.link}");
 
-                  final uri = Uri.parse(widget.link);
+                    final uri = Uri.parse(widget.link);
 
-                  TextEditingController nameController =
-                      TextEditingController();
-                  print("h1");
-                  final String oldname =
-                      uri.pathSegments.last.replaceAll('-', ' ');
-                  nameController.text = oldname;
+                    TextEditingController nameController =
+                        TextEditingController();
+                    print("h1");
+                    final String oldname =
+                        uri.pathSegments.last.replaceAll('-', ' ');
+                    nameController.text = oldname;
 
-                  print("h2");
-                  TextEditingController linkController =
-                      TextEditingController();
-                  final String oldlink = widget.link;
-                  linkController.text = oldlink;
+                    print("h2");
+                    TextEditingController linkController =
+                        TextEditingController();
+                    final String oldlink = widget.link;
+                    linkController.text = oldlink;
 
-                  print("h3");
-                  await openDialogForBookmark(
-                      context: context,
-                      nameController: nameController,
-                      linkController: linkController);
+                    print("h3");
+                    await openDialogForBookmark(
+                        context: context,
+                        nameController: nameController,
+                        linkController: linkController);
 
-                  String nameVal = nameController.text;
-                  String linkVal = linkController.text;
+                    String nameVal = nameController.text;
+                    String linkVal = linkController.text;
 
-                  print("h4");
-                  if ((nameVal.isNotEmpty) && (linkVal.isNotEmpty)) {
-                    widget.bm.addEntries({nameVal: linkVal}.entries);
-                    await BookMarkStorage().saveToStorage();
+                    print("h4");
+                    if ((nameVal.isNotEmpty) && (linkVal.isNotEmpty)) {
+                      widget.bm.addEntries({nameVal: linkVal}.entries);
+                      await BookMarkStorage().saveToStorage();
+                    }
+
+                    print("h5");
+                    SystemNavigator.pop();
                   }
-
-                  print("h5");
+                } catch (e) {
+                  await invalidUrlDialog(
+                      context: context,
+                      title: "INVALID URL",
+                      message: "${widget.link} is not a valid url");
                   SystemNavigator.pop();
                 }
-              } catch (e) {
-                await invalidUrlDialog(
-                    context: context,
-                    title: "INVALID URL",
-                    message: "${widget.link} is not a valid url");
-                SystemNavigator.pop();
-              }
-            },
-          )
-        ],
+              },
+            )
+          ],
+        ),
       ),
     );
   }

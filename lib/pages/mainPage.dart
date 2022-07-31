@@ -16,6 +16,22 @@ class MainPage extends StatefulWidget {
 }
 
 class _MainPageState extends State<MainPage> {
+  List<String> selectedItems = [];
+  bool selectMode = false;
+  Map<String, bool> selectedStates = {};
+
+  void selectModeTrue() {
+    setState(() {
+      selectMode = true;
+    });
+  }
+
+  void selectModeFalse() {
+    setState(() {
+      selectMode = false;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     List<String> listOfAllItems = widget.bm.keys.toList()..sort();
@@ -30,9 +46,115 @@ class _MainPageState extends State<MainPage> {
       }
     }
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.parentRoot),
-      ),
+      appBar: !selectMode
+          ? AppBar(
+              title: Text(widget.parentRoot),
+            )
+          : AppBar(
+              title: Text(widget.parentRoot),
+              actions: <Widget>[
+                PopupMenuButton(
+                  itemBuilder: (BuildContext context) {
+                    return ["Edit", "Copy", "Move", "Delete"]
+                        .map((String choice) {
+                      return PopupMenuItem<String>(
+                        value: choice,
+                        child: Text(choice),
+                      );
+                    }).toList();
+                  },
+                  onSelected: (item) async {
+                    switch (item) {
+                      case "Edit":
+                        if (selectedItems.length != 1) {
+                          showMessage(
+                              context, "Please select only one item to edit");
+                        } else {
+                          if (listOfDirectories.contains(selectedItems[0])) {
+                            TextEditingController folderController =
+                                TextEditingController();
+                            final String oldFolderName = selectedItems[0];
+                            folderController.text = oldFolderName;
+
+                            await openDialogForFolder(
+                                context: context,
+                                folderController: folderController);
+
+                            String folderNameVal = folderController.text;
+
+                            if ((folderNameVal.isNotEmpty) &&
+                                !(folderNameVal == oldFolderName)) {
+                              Map<String, dynamic> storeVal =
+                                  widget.bm[selectedItems[0]];
+
+                              widget.bm.addEntries(
+                                  {folderNameVal: storeVal}.entries);
+                              widget.bm.remove(oldFolderName);
+                              await BookMarkStorage().saveToStorage();
+                            }
+                            setState(() {
+                              // if (folderNameVal.isNotEmpty) {
+                              //   widget.folderName = folderNameVal;
+                              // }
+                              selectedItems.clear();
+                              selectMode = false;
+                            });
+                          } else {
+                            TextEditingController nameController =
+                                TextEditingController();
+                            final String oldname = selectedItems[0];
+                            nameController.text = oldname;
+
+                            TextEditingController linkController =
+                                TextEditingController();
+                            final String oldlink = widget.bm[selectedItems[0]];
+                            linkController.text = oldlink;
+
+                            await openDialogForBookmark(
+                                context: context,
+                                nameController: nameController,
+                                linkController: linkController);
+
+                            String nameVal = nameController.text;
+                            String linkVal = linkController.text;
+
+                            if ((nameVal.isNotEmpty) &&
+                                (linkVal.isNotEmpty) &&
+                                (!(nameVal == oldname) ||
+                                    !(linkVal == oldlink))) {
+                              widget.bm.addEntries({nameVal: linkVal}.entries);
+                              widget.bm.remove(selectedItems[0]);
+                              await BookMarkStorage().saveToStorage();
+                            }
+                            setState(() {
+                              // if ((nameVal.isNotEmpty) &&
+                              //     (linkVal.isNotEmpty)) {
+                              //   widget.bookMarkLink = linkVal;
+                              //   widget.bookMarkName = nameVal;
+                              // }
+                              selectedItems.clear();
+                              selectMode = false;
+                            });
+                          }
+                        }
+
+                        break;
+                      case "Copy":
+                        print("Copy clicked");
+                        print("Copying following items");
+                        print(selectedItems);
+                        break;
+                      case "Delete":
+                        print("Delete clicked");
+                        break;
+                      case "Move":
+                        print("Move clicked");
+                        break;
+                    }
+                  },
+                )
+              ],
+            ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -42,7 +164,14 @@ class _MainPageState extends State<MainPage> {
               itemCount: listOfDirectories.length,
               itemBuilder: (BuildContext context, int index) {
                 return FolderTile(
-                    bm: widget.bm, folderName: listOfDirectories[index]);
+                  bm: widget.bm,
+                  folderName: listOfDirectories[index],
+                  isSelected: selectedItems.contains(listOfDirectories[index]),
+                  listOfSelectedItems: selectedItems,
+                  selectMode: selectMode,
+                  selectModeTrue: selectModeTrue,
+                  selectModeFalse: selectModeFalse,
+                );
               },
             ),
             ListView.builder(
@@ -51,9 +180,15 @@ class _MainPageState extends State<MainPage> {
               itemCount: listOfBookmarks.length,
               itemBuilder: (BuildContext context, int index) {
                 return BookMarkTile(
-                    bm: widget.bm,
-                    bookMarkName: listOfBookmarks[index],
-                    bookMarkLink: widget.bm[listOfBookmarks[index]].toString());
+                  bm: widget.bm,
+                  bookMarkName: listOfBookmarks[index],
+                  bookMarkLink: widget.bm[listOfBookmarks[index]].toString(),
+                  isSelected: selectedItems.contains(listOfBookmarks[index]),
+                  listOfSelectedItems: selectedItems,
+                  selectMode: selectMode,
+                  selectModeTrue: selectModeTrue,
+                  selectModeFalse: selectModeFalse,
+                );
               },
             )
           ],
@@ -167,8 +302,20 @@ class _MainPageState extends State<MainPage> {
 class FolderTile extends StatefulWidget {
   Map<String, dynamic> bm;
   String folderName;
-
-  FolderTile({Key? key, required this.bm, required this.folderName})
+  bool isSelected;
+  bool selectMode;
+  List<String> listOfSelectedItems;
+  final VoidCallback selectModeTrue;
+  final VoidCallback selectModeFalse;
+  FolderTile(
+      {Key? key,
+      required this.bm,
+      required this.folderName,
+      required this.isSelected,
+      required this.listOfSelectedItems,
+      required this.selectMode,
+      required this.selectModeTrue,
+      required this.selectModeFalse})
       : super(key: key);
 
   @override
@@ -179,37 +326,74 @@ class _FolderTileState extends State<FolderTile> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onLongPress: () async {
-        TextEditingController folderController = TextEditingController();
-        final String oldFolderName = widget.folderName;
-        folderController.text = oldFolderName;
+      // onLongPress: () async {
+      //   TextEditingController folderController = TextEditingController();
+      //   final String oldFolderName = widget.folderName;
+      //   folderController.text = oldFolderName;
 
-        await openDialogForFolder(
-            context: context, folderController: folderController);
+      //   await openDialogForFolder(
+      //       context: context, folderController: folderController);
 
-        String folderNameVal = folderController.text;
+      //   String folderNameVal = folderController.text;
 
-        if ((folderNameVal.isNotEmpty) && !(folderNameVal == oldFolderName)) {
-          Map<String, dynamic> storeVal = widget.bm[widget.folderName];
+      //   if ((folderNameVal.isNotEmpty) && !(folderNameVal == oldFolderName)) {
+      //     Map<String, dynamic> storeVal = widget.bm[widget.folderName];
 
-          widget.bm.addEntries({folderNameVal: storeVal}.entries);
-          widget.bm.remove(oldFolderName);
-          await BookMarkStorage().saveToStorage();
-        }
+      //     widget.bm.addEntries({folderNameVal: storeVal}.entries);
+      //     widget.bm.remove(oldFolderName);
+      //     await BookMarkStorage().saveToStorage();
+      //   }
+      //   setState(() {
+      //     if (folderNameVal.isNotEmpty) {
+      //       widget.folderName = folderNameVal;
+      //     }
+      //   });
+      // },
+      onLongPress: () {
         setState(() {
-          if (folderNameVal.isNotEmpty) {
-            widget.folderName = folderNameVal;
+          print(widget.selectMode);
+          if (widget.isSelected) {
+            widget.listOfSelectedItems.remove(widget.folderName);
+            if (widget.listOfSelectedItems.isEmpty) {
+              widget.selectModeFalse();
+            }
+            print(widget.listOfSelectedItems);
+          } else {
+            widget.listOfSelectedItems.add(widget.folderName);
+            widget.selectModeTrue();
+            print(widget.listOfSelectedItems);
           }
+
+          widget.isSelected = !widget.isSelected;
         });
       },
-      onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) {
-          return MainPage(
-            bm: widget.bm[widget.folderName],
-            parentRoot: widget.folderName,
-          );
-        }));
-      },
+      onTap: !widget.selectMode
+          ? () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) {
+                return MainPage(
+                  bm: widget.bm[widget.folderName],
+                  parentRoot: widget.folderName,
+                );
+              }));
+            }
+          : () {
+              setState(() {
+                print(widget.selectMode);
+                if (widget.isSelected) {
+                  widget.listOfSelectedItems.remove(widget.folderName);
+                  if (widget.listOfSelectedItems.isEmpty) {
+                    widget.selectModeFalse();
+                  }
+                  print(widget.listOfSelectedItems);
+                } else {
+                  widget.listOfSelectedItems.add(widget.folderName);
+                  widget.selectModeTrue();
+                  print(widget.listOfSelectedItems);
+                }
+
+                widget.isSelected = !widget.isSelected;
+              });
+            },
       child: Dismissible(
         direction: DismissDirection.endToStart,
         key: ValueKey<String>(widget.folderName),
@@ -226,6 +410,9 @@ class _FolderTileState extends State<FolderTile> {
             title: Text(widget.folderName),
             leading: const Icon(Icons.folder),
             subtitle: Text(widget.bm[widget.folderName].length.toString()),
+            selected: widget.isSelected,
+            selectedTileColor: widget.isSelected ? Colors.pinkAccent : null,
+            trailing: widget.isSelected ? const Icon(Icons.check) : null,
           ),
         ),
       ),
@@ -237,11 +424,21 @@ class BookMarkTile extends StatefulWidget {
   Map<String, dynamic> bm;
   String bookMarkName;
   String bookMarkLink;
+  bool isSelected;
+  bool selectMode;
+  List<String> listOfSelectedItems;
+  final VoidCallback selectModeTrue;
+  final VoidCallback selectModeFalse;
   BookMarkTile(
       {Key? key,
       required this.bm,
       required this.bookMarkName,
-      required this.bookMarkLink})
+      required this.bookMarkLink,
+      required this.isSelected,
+      required this.listOfSelectedItems,
+      required this.selectMode,
+      required this.selectModeTrue,
+      required this.selectModeFalse})
       : super(key: key);
 
   @override
@@ -252,42 +449,79 @@ class _BookMarkTileState extends State<BookMarkTile> {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onLongPress: () async {
-        TextEditingController nameController = TextEditingController();
-        final String oldname = widget.bookMarkName;
-        nameController.text = oldname;
+      // onLongPress: () async {
+      //   TextEditingController nameController = TextEditingController();
+      //   final String oldname = widget.bookMarkName;
+      //   nameController.text = oldname;
 
-        TextEditingController linkController = TextEditingController();
-        final String oldlink = widget.bookMarkLink;
-        linkController.text = oldlink;
+      //   TextEditingController linkController = TextEditingController();
+      //   final String oldlink = widget.bookMarkLink;
+      //   linkController.text = oldlink;
 
-        await openDialogForBookmark(
-            context: context,
-            nameController: nameController,
-            linkController: linkController);
+      //   await openDialogForBookmark(
+      //       context: context,
+      //       nameController: nameController,
+      //       linkController: linkController);
 
-        String nameVal = nameController.text;
-        String linkVal = linkController.text;
+      //   String nameVal = nameController.text;
+      //   String linkVal = linkController.text;
 
-        if ((nameVal.isNotEmpty) &&
-            (linkVal.isNotEmpty) &&
-            (!(nameVal == oldname) || !(linkVal == oldlink))) {
-          widget.bm.addEntries({nameVal: linkVal}.entries);
-          widget.bm.remove(widget.bookMarkName);
-          await BookMarkStorage().saveToStorage();
-        }
+      //   if ((nameVal.isNotEmpty) &&
+      //       (linkVal.isNotEmpty) &&
+      //       (!(nameVal == oldname) || !(linkVal == oldlink))) {
+      //     widget.bm.addEntries({nameVal: linkVal}.entries);
+      //     widget.bm.remove(widget.bookMarkName);
+      //     await BookMarkStorage().saveToStorage();
+      //   }
+      //   setState(() {
+      //     if ((nameVal.isNotEmpty) && (linkVal.isNotEmpty)) {
+      //       widget.bookMarkLink = linkVal;
+      //       widget.bookMarkName = nameVal;
+      //     }
+      //   });
+      // },
+      onLongPress: () {
         setState(() {
-          if ((nameVal.isNotEmpty) && (linkVal.isNotEmpty)) {
-            widget.bookMarkLink = linkVal;
-            widget.bookMarkName = nameVal;
+          print(widget.selectMode);
+          if (widget.isSelected) {
+            widget.listOfSelectedItems.remove(widget.bookMarkName);
+            if (widget.listOfSelectedItems.isEmpty) {
+              widget.selectModeFalse();
+            }
+            print(widget.listOfSelectedItems);
+          } else {
+            widget.listOfSelectedItems.add(widget.bookMarkName);
+            widget.selectModeTrue();
+            print(widget.listOfSelectedItems);
           }
+
+          widget.isSelected = !widget.isSelected;
         });
       },
-      onTap: () async {
-        final url = widget.bookMarkLink;
-        final uri = Uri.parse(url);
-        await _launchInBrowser(uri);
-      },
+      onTap: !widget.selectMode
+          ? () async {
+              final url = widget.bookMarkLink;
+              final uri = Uri.parse(url);
+              await _launchInBrowser(uri);
+            }
+          : () {
+              setState(() {
+                print(widget.selectMode);
+                if (widget.isSelected) {
+                  widget.listOfSelectedItems.remove(widget.bookMarkName);
+                  if (widget.listOfSelectedItems.isEmpty) {
+                    widget.selectModeFalse();
+                  }
+                  print(widget.listOfSelectedItems);
+                } else {
+                  widget.listOfSelectedItems.add(widget.bookMarkName);
+                  widget.selectModeTrue();
+                  print(widget.listOfSelectedItems);
+                }
+
+                widget.isSelected = !widget.isSelected;
+              });
+            },
       child: Dismissible(
         direction: DismissDirection.endToStart,
         key: ValueKey<String>(widget.bookMarkName),
@@ -301,9 +535,12 @@ class _BookMarkTileState extends State<BookMarkTile> {
         },
         child: Card(
           child: ListTile(
+            selected: widget.isSelected,
+            selectedTileColor: widget.isSelected ? Colors.pinkAccent : null,
             title: Text(widget.bookMarkName),
             leading: const Icon(Icons.link),
             subtitle: Text(widget.bookMarkLink),
+            trailing: widget.isSelected ? const Icon(Icons.check) : null,
           ),
         ),
       ),
