@@ -1,4 +1,5 @@
 import 'package:dir_book/bookmark_storage/bookmarks_storage.dart';
+import 'package:dir_book/pages/folderSelect.dart';
 import 'package:flutter/material.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
@@ -143,12 +144,62 @@ class _MainPageState extends State<MainPage> {
                         print("Copy clicked");
                         print("Copying following items");
                         print(selectedItems);
+                        Map<String, dynamic> itemsToAdd = {};
+                        for (var item in selectedItems) {
+                          itemsToAdd
+                              .addEntries({item: widget.bm[item]}.entries);
+                        }
+
+                        await Navigator.push(context,
+                            MaterialPageRoute(builder: (context) {
+                          return FolderSelect(
+                            bm: BookMarkStorage().setOfBookmarks,
+                            parentRoot: "/",
+                            paste: true,
+                            itemsToAdd: itemsToAdd,
+                          );
+                        }));
+                        setState(() {
+                          selectedItems.clear();
+                        });
                         break;
                       case "Delete":
                         print("Delete clicked");
+                        print("Deleing following items");
+                        print(selectedItems);
+                        setState(() {
+                          for (var key in selectedItems) {
+                            widget.bm.remove(key);
+                          }
+                          selectedItems.clear();
+                        });
                         break;
                       case "Move":
                         print("Move clicked");
+                        print("Moving following items");
+                        print(selectedItems);
+                        Map<String, dynamic> itemsToAdd = {};
+                        for (var item in selectedItems) {
+                          itemsToAdd
+                              .addEntries({item: widget.bm[item]}.entries);
+                        }
+
+                        await Navigator.push(context,
+                            MaterialPageRoute(builder: (context) {
+                          return FolderSelect(
+                            bm: BookMarkStorage().setOfBookmarks,
+                            parentRoot: "/",
+                            paste: true,
+                            itemsToAdd: itemsToAdd,
+                          );
+                        }));
+
+                        setState(() {
+                          for (var key in selectedItems) {
+                            widget.bm.remove(key);
+                          }
+                          selectedItems.clear();
+                        });
                         break;
                     }
                   },

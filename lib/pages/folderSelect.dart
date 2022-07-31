@@ -7,14 +7,16 @@ class FolderSelect extends StatefulWidget {
   String parentRoot;
   bool paste;
   String link;
+  Map<String, dynamic>? itemsToAdd;
 
-  FolderSelect(
-      {Key? key,
-      required this.bm,
-      required this.parentRoot,
-      required this.paste,
-      this.link = ""})
-      : super(key: key);
+  FolderSelect({
+    Key? key,
+    required this.bm,
+    required this.parentRoot,
+    required this.paste,
+    this.link = "",
+    this.itemsToAdd,
+  }) : super(key: key);
 
   @override
   State<FolderSelect> createState() => _FolderSelect();
@@ -31,56 +33,21 @@ class _FolderSelect extends State<FolderSelect> {
         listOfDirectories.add(element);
       }
     }
+    print("printing items to select");
+    print(widget.itemsToAdd);
     return SafeArea(
       child: Scaffold(
         appBar: AppBar(title: Text(widget.parentRoot)),
-        // appBar: !widget.paste
-        //     ? AppBar(
-        //         title: Text(widget.parentRoot),
-        //       )
-        //     : AppBar(
-        //         title: Text(widget.parentRoot),
-        //         actions: <Widget>[
-        //           PopupMenuButton(
-        //             itemBuilder: (BuildContext context) {
-        //               return ["Select", "Edit", "Copy", "Move", "Delete"]
-        //                   .map((String choice) {
-        //                 return PopupMenuItem<String>(
-        //                   value: choice,
-        //                   child: Text(choice),
-        //                 );
-        //               }).toList();
-        //             },
-        //             onSelected: (item) {
-        //               switch (item) {
-        //                 case "Select":
-        //                   print("Select Clicked");
-        //                   break;
-        //                 case "Edit":
-        //                   print("Edit clicked");
-        //                   break;
-        //                 case "Copy":
-        //                   print("Copy clicked");
-        //                   break;
-        //                 case "Delete":
-        //                   print("Delete clicked");
-        //                   break;
-        //                 case "Move":
-        //                   print("Move clicked");
-        //                   break;
-        //               }
-        //             },
-        //           )
-        //         ],
-        //       ),
         body: ListView.builder(
           itemCount: listOfDirectories.length,
           itemBuilder: (BuildContext context, int index) {
             return FolderTile(
-                bm: widget.bm,
-                folderName: listOfDirectories[index],
-                paste: widget.paste,
-                link: widget.link);
+              bm: widget.bm,
+              folderName: listOfDirectories[index],
+              paste: widget.paste,
+              link: widget.link,
+              itemsToAdd: widget.itemsToAdd,
+            );
           },
         ),
         floatingActionButton: Column(
@@ -115,55 +82,67 @@ class _FolderSelect extends State<FolderSelect> {
               tooltip: "Select this folder",
               backgroundColor: Colors.green,
               child: const Icon(Icons.pin_drop),
-              onPressed: () async {
-                try {
-                  print(
-                      "printinf details ---------------------------------------------------------------------------");
-                  if (!widget.paste) {
-                    print("Folder name is ${widget.parentRoot}");
-                    print("Shared link is ${widget.link}");
+              onPressed: !widget.paste
+                  ? () async {
+                      print('block 1');
+                      try {
+                        print(
+                            "printinf details ---------------------------------------------------------------------------");
+                        if (!widget.paste) {
+                          print("Folder name is ${widget.parentRoot}");
+                          print("Shared link is ${widget.link}");
 
-                    final uri = Uri.parse(widget.link);
+                          final uri = Uri.parse(widget.link);
 
-                    TextEditingController nameController =
-                        TextEditingController();
-                    print("h1");
-                    final String oldname =
-                        uri.pathSegments.last.replaceAll('-', ' ');
-                    nameController.text = oldname;
+                          TextEditingController nameController =
+                              TextEditingController();
+                          print("h1");
+                          final String oldname =
+                              uri.pathSegments.last.replaceAll('-', ' ');
+                          nameController.text = oldname;
 
-                    print("h2");
-                    TextEditingController linkController =
-                        TextEditingController();
-                    final String oldlink = widget.link;
-                    linkController.text = oldlink;
+                          print("h2");
+                          TextEditingController linkController =
+                              TextEditingController();
+                          final String oldlink = widget.link;
+                          linkController.text = oldlink;
 
-                    print("h3");
-                    await openDialogForBookmark(
-                        context: context,
-                        nameController: nameController,
-                        linkController: linkController);
+                          print("h3");
+                          await openDialogForBookmark(
+                              context: context,
+                              nameController: nameController,
+                              linkController: linkController);
 
-                    String nameVal = nameController.text;
-                    String linkVal = linkController.text;
+                          String nameVal = nameController.text;
+                          String linkVal = linkController.text;
 
-                    print("h4");
-                    if ((nameVal.isNotEmpty) && (linkVal.isNotEmpty)) {
-                      widget.bm.addEntries({nameVal: linkVal}.entries);
-                      await BookMarkStorage().saveToStorage();
+                          print("h4");
+                          if ((nameVal.isNotEmpty) && (linkVal.isNotEmpty)) {
+                            widget.bm.addEntries({nameVal: linkVal}.entries);
+                            await BookMarkStorage().saveToStorage();
+                          }
+
+                          print("h5");
+                          SystemNavigator.pop();
+                        }
+                      } catch (e) {
+                        await invalidUrlDialog(
+                            context: context,
+                            title: "INVALID URL",
+                            message: "${widget.link} is not a valid url");
+                        SystemNavigator.pop();
+                      }
                     }
+                  : () async {
+                      print('block2');
+                      if (widget.itemsToAdd != null) {
+                        print(widget.itemsToAdd);
+                        widget.bm.addEntries(widget.itemsToAdd!.entries);
 
-                    print("h5");
-                    SystemNavigator.pop();
-                  }
-                } catch (e) {
-                  await invalidUrlDialog(
-                      context: context,
-                      title: "INVALID URL",
-                      message: "${widget.link} is not a valid url");
-                  SystemNavigator.pop();
-                }
-              },
+                        await BookMarkStorage().saveToStorage();
+                      }
+                      // SystemNavigator.pop();
+                    },
             )
           ],
         ),
@@ -177,14 +156,16 @@ class FolderTile extends StatefulWidget {
   String folderName;
   bool paste;
   String link;
+  Map<String, dynamic>? itemsToAdd;
 
-  FolderTile(
-      {Key? key,
-      required this.bm,
-      required this.folderName,
-      required this.paste,
-      this.link = ""})
-      : super(key: key);
+  FolderTile({
+    Key? key,
+    required this.bm,
+    required this.folderName,
+    required this.paste,
+    this.link = "",
+    this.itemsToAdd,
+  }) : super(key: key);
 
   @override
   _FolderTileState createState() => _FolderTileState();
@@ -224,6 +205,7 @@ class _FolderTileState extends State<FolderTile> {
             parentRoot: widget.folderName,
             paste: widget.paste,
             link: widget.link,
+            itemsToAdd: widget.itemsToAdd,
           );
         }));
       },
