@@ -41,7 +41,8 @@ class BookMarkStorage {
 
       return contents;
     } catch (e) {
-      String emptyJsonString = jsonEncode({});
+      String emptyJsonString =
+          jsonEncode({"About Me": "https://gitlab.com/RohitSingh107/dirbook"});
 
       final path = await _localPath;
       File f = File('$path/test.json');

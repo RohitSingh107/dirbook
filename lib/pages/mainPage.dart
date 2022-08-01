@@ -258,48 +258,62 @@ class _MainPageState extends State<MainPage> {
           children: [
             const DrawerHeader(
               decoration: BoxDecoration(
-                color: Colors.blue,
+                color: Colors.purpleAccent,
               ),
               child: Text('Bookmark Manager (Beta)'),
             ),
-            ListTile(
-              title: const Text('Import'),
-              onTap: () async {
-                // print(
-                // "Here importing starts-------------------------------------------------------------------------------------------------------------");
-
-                bool sucess = await BookMarkStorage().importData();
-
-                if (sucess) {
-                  Restart.restartApp();
+            Card(
+              child: ListTile(
+                title: const Text('Import'),
+                onTap: () async {
                   // print(
-                  //     "Here app should be restarted-----------------------------------------------------------------------------------------------------------------------------");
-                } else {
-                  showMessage(context,
-                      "Import Failed! Please select a valid json file"); // This might cause issues -------------------------------------------------------------------
-                }
-              },
-            ),
-            ListTile(
-              title: const Text('Export'),
-              onTap: () async {
-                bool sucess = await BookMarkStorage().exportData();
-                if (sucess) {
-                  // await importExportDialog(
-                  //     context, // This might cause issues ----------------------------------------------------------------------------------
-                  //     "Sucess!",
-                  //     "Data Exported sucessfully");
+                  // "Here importing starts-------------------------------------------------------------------------------------------------------------");
 
-                  showMessage(context, "Data Exported sucessfully!");
-                } else {
-                  // await importExportDialog(
-                  //     context, // This might cause issues ----------------------------------------------------------------------------------
-                  //     "Export Failed",
-                  //     "Export Failed");
-                  showMessage(context, "Export Failed!");
-                }
-              },
+                  bool sucess = await BookMarkStorage().importData();
+
+                  if (sucess) {
+                    Restart.restartApp();
+                    // print(
+                    //     "Here app should be restarted-----------------------------------------------------------------------------------------------------------------------------");
+                  } else {
+                    showMessage(context,
+                        "Import Failed! Please select a valid json file"); // This might cause issues -------------------------------------------------------------------
+                  }
+                },
+              ),
             ),
+            Card(
+              child: ListTile(
+                title: const Text('Export'),
+                onTap: () async {
+                  bool sucess = await BookMarkStorage().exportData();
+                  if (sucess) {
+                    // await importExportDialog(
+                    //     context, // This might cause issues ----------------------------------------------------------------------------------
+                    //     "Sucess!",
+                    //     "Data Exported sucessfully");
+
+                    showMessage(context, "Data Exported sucessfully!");
+                  } else {
+                    // await importExportDialog(
+                    //     context, // This might cause issues ----------------------------------------------------------------------------------
+                    //     "Export Failed",
+                    //     "Export Failed");
+                    showMessage(context, "Export Failed!");
+                  }
+                },
+              ),
+            ),
+            Card(
+              child: ListTile(
+                title: Text("HomePage"),
+                subtitle: Text("https://gitlab.com/RohitSingh107/dirbook"),
+                onTap: () async {
+                  await _launchInBrowser(
+                      Uri.parse("https://gitlab.com/RohitSingh107/dirbook"));
+                },
+              ),
+            )
           ],
         )),
         floatingActionButton: SpeedDial(
@@ -562,7 +576,11 @@ class _BookMarkTileState extends State<BookMarkTile> {
           ? () async {
               final url = widget.bookMarkLink;
               final uri = Uri.parse(url);
-              await _launchInBrowser(uri);
+              try {
+                await _launchInBrowser(uri);
+              } catch (e) {
+                showMessage(context, "$url is invalid url");
+              }
             }
           : () {
               setState(() {

@@ -1,16 +1,15 @@
 # dir_book
 
-A new Flutter project.
+Bookmarks Manager
 
-## Getting Started
+## Bookmarks Manager
 
-This project is a starting point for a Flutter application.
+It is an app to manage yours bookmarks.
 
-A few resources to get you started if this is your first Flutter project:
+You can create folder inside folder inside folder ........
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+App have all basic management features like edit, copy, move, delete.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Import/Export bookmarks from/to json files.
+
+If you like the App don't forgot to 'star' the repo :)
