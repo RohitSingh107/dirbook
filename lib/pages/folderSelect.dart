@@ -55,30 +55,6 @@ class _FolderSelect extends State<FolderSelect> {
           children: [
             FloatingActionButton(
               heroTag: null,
-              tooltip: "New Folder",
-              backgroundColor: Colors.blue,
-              child: const Icon(Icons.create_new_folder),
-              onPressed: () async {
-                TextEditingController folderController =
-                    TextEditingController();
-                await openDialogForFolder(
-                    context: context, folderController: folderController);
-
-                String val = folderController.text;
-
-                if (val.isNotEmpty) {
-                  Map<String, dynamic> emptyFolder = {};
-                  widget.bm.addEntries({val: emptyFolder}.entries);
-
-                  await BookMarkStorage().saveToStorage();
-                }
-
-                setState(() {});
-              },
-            ),
-            const SizedBox(height: 10),
-            FloatingActionButton(
-              heroTag: null,
               tooltip: "Select this folder",
               backgroundColor: Colors.green,
               child: const Icon(Icons.pin_drop),
@@ -141,8 +117,34 @@ class _FolderSelect extends State<FolderSelect> {
 
                         await BookMarkStorage().saveToStorage();
                       }
+
+                      Navigator.of(context).pop();
                       // SystemNavigator.pop();
                     },
+            ),
+            const SizedBox(height: 10),
+            FloatingActionButton(
+              heroTag: null,
+              tooltip: "New Folder",
+              backgroundColor: Colors.blue,
+              child: const Icon(Icons.create_new_folder),
+              onPressed: () async {
+                TextEditingController folderController =
+                    TextEditingController();
+                await openDialogForFolder(
+                    context: context, folderController: folderController);
+
+                String val = folderController.text;
+
+                if (val.isNotEmpty) {
+                  Map<String, dynamic> emptyFolder = {};
+                  widget.bm.addEntries({val: emptyFolder}.entries);
+
+                  await BookMarkStorage().saveToStorage();
+                }
+
+                setState(() {});
+              },
             )
           ],
         ),
@@ -198,8 +200,8 @@ class _FolderTileState extends State<FolderTile> {
           }
         });
       },
-      onTap: () {
-        Navigator.push(context, MaterialPageRoute(builder: (context) {
+      onTap: () async {
+        await Navigator.push(context, MaterialPageRoute(builder: (context) {
           return FolderSelect(
             bm: widget.bm[widget.folderName],
             parentRoot: widget.folderName,
@@ -208,6 +210,8 @@ class _FolderTileState extends State<FolderTile> {
             itemsToAdd: widget.itemsToAdd,
           );
         }));
+
+        Navigator.of(context).pop();
       },
       child: Card(
         child: ListTile(

@@ -19,7 +19,7 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   List<String> selectedItems = [];
   bool selectMode = false;
-  Map<String, bool> selectedStates = {};
+  // Map<String, bool> selectedStates = {};
 
   void selectModeTrue() {
     setState(() {
@@ -46,305 +46,314 @@ class _MainPageState extends State<MainPage> {
         listOfDirectories.add(element);
       }
     }
-    return Scaffold(
-      appBar: !selectMode
-          ? AppBar(
-              title: Text(widget.parentRoot),
-            )
-          : AppBar(
-              title: Text(widget.parentRoot),
-              actions: <Widget>[
-                PopupMenuButton(
-                  itemBuilder: (BuildContext context) {
-                    return ["Edit", "Copy", "Move", "Delete"]
-                        .map((String choice) {
-                      return PopupMenuItem<String>(
-                        value: choice,
-                        child: Text(choice),
-                      );
-                    }).toList();
-                  },
-                  onSelected: (item) async {
-                    switch (item) {
-                      case "Edit":
-                        if (selectedItems.length != 1) {
-                          showMessage(
-                              context, "Please select only one item to edit");
-                        } else {
-                          if (listOfDirectories.contains(selectedItems[0])) {
-                            TextEditingController folderController =
-                                TextEditingController();
-                            final String oldFolderName = selectedItems[0];
-                            folderController.text = oldFolderName;
-
-                            await openDialogForFolder(
-                                context: context,
-                                folderController: folderController);
-
-                            String folderNameVal = folderController.text;
-
-                            if ((folderNameVal.isNotEmpty) &&
-                                !(folderNameVal == oldFolderName)) {
-                              Map<String, dynamic> storeVal =
-                                  widget.bm[selectedItems[0]];
-
-                              widget.bm.addEntries(
-                                  {folderNameVal: storeVal}.entries);
-                              widget.bm.remove(oldFolderName);
-                              await BookMarkStorage().saveToStorage();
-                            }
-                            setState(() {
-                              // if (folderNameVal.isNotEmpty) {
-                              //   widget.folderName = folderNameVal;
-                              // }
-                              selectedItems.clear();
-                              selectMode = false;
-                            });
+    return SafeArea(
+      child: Scaffold(
+        appBar: !selectMode
+            ? AppBar(
+                title: Text(widget.parentRoot),
+              )
+            : AppBar(
+                title: Text(widget.parentRoot),
+                actions: <Widget>[
+                  PopupMenuButton(
+                    itemBuilder: (BuildContext context) {
+                      return ["Edit", "Copy", "Move", "Delete"]
+                          .map((String choice) {
+                        return PopupMenuItem<String>(
+                          value: choice,
+                          child: Text(choice),
+                        );
+                      }).toList();
+                    },
+                    onSelected: (item) async {
+                      switch (item) {
+                        case "Edit":
+                          if (selectedItems.length != 1) {
+                            showMessage(
+                                context, "Please select only one item to edit");
                           } else {
-                            TextEditingController nameController =
-                                TextEditingController();
-                            final String oldname = selectedItems[0];
-                            nameController.text = oldname;
+                            if (listOfDirectories.contains(selectedItems[0])) {
+                              TextEditingController folderController =
+                                  TextEditingController();
+                              final String oldFolderName = selectedItems[0];
+                              folderController.text = oldFolderName;
 
-                            TextEditingController linkController =
-                                TextEditingController();
-                            final String oldlink = widget.bm[selectedItems[0]];
-                            linkController.text = oldlink;
+                              await openDialogForFolder(
+                                  context: context,
+                                  folderController: folderController);
 
-                            await openDialogForBookmark(
-                                context: context,
-                                nameController: nameController,
-                                linkController: linkController);
+                              String folderNameVal = folderController.text;
 
-                            String nameVal = nameController.text;
-                            String linkVal = linkController.text;
+                              if ((folderNameVal.isNotEmpty) &&
+                                  !(folderNameVal == oldFolderName)) {
+                                Map<String, dynamic> storeVal =
+                                    widget.bm[selectedItems[0]];
 
-                            if ((nameVal.isNotEmpty) &&
-                                (linkVal.isNotEmpty) &&
-                                (!(nameVal == oldname) ||
-                                    !(linkVal == oldlink))) {
-                              widget.bm.addEntries({nameVal: linkVal}.entries);
-                              widget.bm.remove(selectedItems[0]);
-                              await BookMarkStorage().saveToStorage();
+                                widget.bm.addEntries(
+                                    {folderNameVal: storeVal}.entries);
+                                widget.bm.remove(oldFolderName);
+                                await BookMarkStorage().saveToStorage();
+                              }
+                              setState(() {
+                                // if (folderNameVal.isNotEmpty) {
+                                //   widget.folderName = folderNameVal;
+                                // }
+                                selectedItems.clear();
+                                selectMode = false;
+                              });
+                            } else {
+                              TextEditingController nameController =
+                                  TextEditingController();
+                              final String oldname = selectedItems[0];
+                              nameController.text = oldname;
+
+                              TextEditingController linkController =
+                                  TextEditingController();
+                              final String oldlink =
+                                  widget.bm[selectedItems[0]];
+                              linkController.text = oldlink;
+
+                              await openDialogForBookmark(
+                                  context: context,
+                                  nameController: nameController,
+                                  linkController: linkController);
+
+                              String nameVal = nameController.text;
+                              String linkVal = linkController.text;
+
+                              if ((nameVal.isNotEmpty) &&
+                                  (linkVal.isNotEmpty) &&
+                                  (!(nameVal == oldname) ||
+                                      !(linkVal == oldlink))) {
+                                widget.bm
+                                    .addEntries({nameVal: linkVal}.entries);
+                                widget.bm.remove(selectedItems[0]);
+                                await BookMarkStorage().saveToStorage();
+                              }
+                              setState(() {
+                                // if ((nameVal.isNotEmpty) &&
+                                //     (linkVal.isNotEmpty)) {
+                                //   widget.bookMarkLink = linkVal;
+                                //   widget.bookMarkName = nameVal;
+                                // }
+                                selectedItems.clear();
+                                selectMode = false;
+                              });
                             }
-                            setState(() {
-                              // if ((nameVal.isNotEmpty) &&
-                              //     (linkVal.isNotEmpty)) {
-                              //   widget.bookMarkLink = linkVal;
-                              //   widget.bookMarkName = nameVal;
-                              // }
-                              selectedItems.clear();
-                              selectMode = false;
-                            });
                           }
-                        }
 
-                        break;
-                      case "Copy":
-                        print("Copy clicked");
-                        print("Copying following items");
-                        print(selectedItems);
-                        Map<String, dynamic> itemsToAdd = {};
-                        for (var item in selectedItems) {
-                          itemsToAdd
-                              .addEntries({item: widget.bm[item]}.entries);
-                        }
-
-                        await Navigator.push(context,
-                            MaterialPageRoute(builder: (context) {
-                          return FolderSelect(
-                            bm: BookMarkStorage().setOfBookmarks,
-                            parentRoot: "/",
-                            paste: true,
-                            itemsToAdd: itemsToAdd,
-                          );
-                        }));
-                        setState(() {
-                          selectedItems.clear();
-                        });
-                        break;
-                      case "Delete":
-                        print("Delete clicked");
-                        print("Deleing following items");
-                        print(selectedItems);
-                        setState(() {
-                          for (var key in selectedItems) {
-                            widget.bm.remove(key);
+                          break;
+                        case "Copy":
+                          print("Copy clicked");
+                          print("Copying following items");
+                          print(selectedItems);
+                          Map<String, dynamic> itemsToAdd = {};
+                          for (var item in selectedItems) {
+                            itemsToAdd
+                                .addEntries({item: widget.bm[item]}.entries);
                           }
-                          selectedItems.clear();
-                        });
-                        break;
-                      case "Move":
-                        print("Move clicked");
-                        print("Moving following items");
-                        print(selectedItems);
-                        Map<String, dynamic> itemsToAdd = {};
-                        for (var item in selectedItems) {
-                          itemsToAdd
-                              .addEntries({item: widget.bm[item]}.entries);
-                        }
 
-                        await Navigator.push(context,
-                            MaterialPageRoute(builder: (context) {
-                          return FolderSelect(
-                            bm: BookMarkStorage().setOfBookmarks,
-                            parentRoot: "/",
-                            paste: true,
-                            itemsToAdd: itemsToAdd,
-                          );
-                        }));
-
-                        setState(() {
-                          for (var key in selectedItems) {
-                            widget.bm.remove(key);
+                          await Navigator.push(context,
+                              MaterialPageRoute(builder: (context) {
+                            return FolderSelect(
+                              bm: BookMarkStorage().setOfBookmarks,
+                              parentRoot: "/",
+                              paste: true,
+                              itemsToAdd: itemsToAdd,
+                            );
+                          }));
+                          setState(() {
+                            selectedItems.clear();
+                            selectMode = false;
+                          });
+                          break;
+                        case "Delete":
+                          print("Delete clicked");
+                          print("Deleing following items");
+                          print(selectedItems);
+                          setState(() {
+                            for (var key in selectedItems) {
+                              widget.bm.remove(key);
+                            }
+                            selectedItems.clear();
+                            selectMode = false;
+                          });
+                          break;
+                        case "Move":
+                          print("Move clicked");
+                          print("Moving following items");
+                          print(selectedItems);
+                          Map<String, dynamic> itemsToAdd = {};
+                          for (var item in selectedItems) {
+                            itemsToAdd
+                                .addEntries({item: widget.bm[item]}.entries);
                           }
-                          selectedItems.clear();
-                        });
-                        break;
-                    }
-                  },
-                )
-              ],
-            ),
-      body: SingleChildScrollView(
-        child: Column(
+
+                          await Navigator.push(context,
+                              MaterialPageRoute(builder: (context) {
+                            return FolderSelect(
+                              bm: BookMarkStorage().setOfBookmarks,
+                              parentRoot: "/",
+                              paste: true,
+                              itemsToAdd: itemsToAdd,
+                            );
+                          }));
+
+                          setState(() {
+                            for (var key in selectedItems) {
+                              widget.bm.remove(key);
+                            }
+                            selectedItems.clear();
+                            selectMode = false;
+                          });
+                          break;
+                      }
+                    },
+                  )
+                ],
+              ),
+        body: SingleChildScrollView(
+          child: Column(
+            children: [
+              ListView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: listOfDirectories.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return FolderTile(
+                    bm: widget.bm,
+                    folderName: listOfDirectories[index],
+                    isSelected:
+                        selectedItems.contains(listOfDirectories[index]),
+                    listOfSelectedItems: selectedItems,
+                    selectMode: selectMode,
+                    selectModeTrue: selectModeTrue,
+                    selectModeFalse: selectModeFalse,
+                  );
+                },
+              ),
+              ListView.builder(
+                physics: const NeverScrollableScrollPhysics(),
+                shrinkWrap: true,
+                itemCount: listOfBookmarks.length,
+                itemBuilder: (BuildContext context, int index) {
+                  return BookMarkTile(
+                    bm: widget.bm,
+                    bookMarkName: listOfBookmarks[index],
+                    bookMarkLink: widget.bm[listOfBookmarks[index]].toString(),
+                    isSelected: selectedItems.contains(listOfBookmarks[index]),
+                    listOfSelectedItems: selectedItems,
+                    selectMode: selectMode,
+                    selectModeTrue: selectModeTrue,
+                    selectModeFalse: selectModeFalse,
+                  );
+                },
+              )
+            ],
+          ),
+        ),
+        drawer: Drawer(
+            child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            ListView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: listOfDirectories.length,
-              itemBuilder: (BuildContext context, int index) {
-                return FolderTile(
-                  bm: widget.bm,
-                  folderName: listOfDirectories[index],
-                  isSelected: selectedItems.contains(listOfDirectories[index]),
-                  listOfSelectedItems: selectedItems,
-                  selectMode: selectMode,
-                  selectModeTrue: selectModeTrue,
-                  selectModeFalse: selectModeFalse,
-                );
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+              child: Text('Bookmark Manager (Beta)'),
+            ),
+            ListTile(
+              title: const Text('Import'),
+              onTap: () async {
+                // print(
+                // "Here importing starts-------------------------------------------------------------------------------------------------------------");
+
+                bool sucess = await BookMarkStorage().importData();
+
+                if (sucess) {
+                  Restart.restartApp();
+                  // print(
+                  //     "Here app should be restarted-----------------------------------------------------------------------------------------------------------------------------");
+                } else {
+                  showMessage(context,
+                      "Import Failed! Please select a valid json file"); // This might cause issues -------------------------------------------------------------------
+                }
               },
             ),
-            ListView.builder(
-              physics: const NeverScrollableScrollPhysics(),
-              shrinkWrap: true,
-              itemCount: listOfBookmarks.length,
-              itemBuilder: (BuildContext context, int index) {
-                return BookMarkTile(
-                  bm: widget.bm,
-                  bookMarkName: listOfBookmarks[index],
-                  bookMarkLink: widget.bm[listOfBookmarks[index]].toString(),
-                  isSelected: selectedItems.contains(listOfBookmarks[index]),
-                  listOfSelectedItems: selectedItems,
-                  selectMode: selectMode,
-                  selectModeTrue: selectModeTrue,
-                  selectModeFalse: selectModeFalse,
-                );
+            ListTile(
+              title: const Text('Export'),
+              onTap: () async {
+                bool sucess = await BookMarkStorage().exportData();
+                if (sucess) {
+                  // await importExportDialog(
+                  //     context, // This might cause issues ----------------------------------------------------------------------------------
+                  //     "Sucess!",
+                  //     "Data Exported sucessfully");
+
+                  showMessage(context, "Data Exported sucessfully!");
+                } else {
+                  // await importExportDialog(
+                  //     context, // This might cause issues ----------------------------------------------------------------------------------
+                  //     "Export Failed",
+                  //     "Export Failed");
+                  showMessage(context, "Export Failed!");
+                }
+              },
+            ),
+          ],
+        )),
+        floatingActionButton: SpeedDial(
+          animatedIcon: AnimatedIcons.add_event,
+          children: [
+            SpeedDialChild(
+              child: const Icon(Icons.folder),
+              label: "Add Folder",
+              backgroundColor: Colors.blue,
+              onTap: () async {
+                TextEditingController folderController =
+                    TextEditingController();
+                await openDialogForFolder(
+                    context: context, folderController: folderController);
+
+                String val = folderController.text;
+
+                if (val.isNotEmpty) {
+                  Map<String, dynamic> emptyFolder = {};
+                  widget.bm.addEntries({val: emptyFolder}.entries);
+
+                  await BookMarkStorage().saveToStorage();
+                }
+
+                setState(() {});
+              },
+            ),
+            SpeedDialChild(
+              child: const Icon(Icons.add_link),
+              label: "Add Bookmark",
+              backgroundColor: Colors.green,
+              onTap: () async {
+                TextEditingController nameController = TextEditingController();
+
+                TextEditingController linkController = TextEditingController();
+                await openDialogForBookmark(
+                    context: context,
+                    nameController: nameController,
+                    linkController: linkController);
+
+                String nameVal = nameController.text;
+                String linkVal = linkController.text;
+
+                if ((nameVal.isNotEmpty) && (linkVal.isNotEmpty)) {
+                  widget.bm.addEntries({nameVal: linkVal}.entries);
+
+                  await BookMarkStorage().saveToStorage();
+                }
+
+                setState(() {});
               },
             )
           ],
         ),
-      ),
-      drawer: Drawer(
-          child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(
-              color: Colors.blue,
-            ),
-            child: Text('Bookmark Manager (Beta)'),
-          ),
-          ListTile(
-            title: const Text('Import'),
-            onTap: () async {
-              // print(
-              // "Here importing starts-------------------------------------------------------------------------------------------------------------");
-
-              bool sucess = await BookMarkStorage().importData();
-
-              if (sucess) {
-                Restart.restartApp();
-                // print(
-                //     "Here app should be restarted-----------------------------------------------------------------------------------------------------------------------------");
-              } else {
-                showMessage(context,
-                    "Import Failed! Please select a valid json file"); // This might cause issues -------------------------------------------------------------------
-              }
-            },
-          ),
-          ListTile(
-            title: const Text('Export'),
-            onTap: () async {
-              bool sucess = await BookMarkStorage().exportData();
-              if (sucess) {
-                // await importExportDialog(
-                //     context, // This might cause issues ----------------------------------------------------------------------------------
-                //     "Sucess!",
-                //     "Data Exported sucessfully");
-
-                showMessage(context, "Data Exported sucessfully!");
-              } else {
-                // await importExportDialog(
-                //     context, // This might cause issues ----------------------------------------------------------------------------------
-                //     "Export Failed",
-                //     "Export Failed");
-                showMessage(context, "Export Failed!");
-              }
-            },
-          ),
-        ],
-      )),
-      floatingActionButton: SpeedDial(
-        animatedIcon: AnimatedIcons.add_event,
-        children: [
-          SpeedDialChild(
-            child: const Icon(Icons.folder),
-            label: "Add Folder",
-            backgroundColor: Colors.red,
-            onTap: () async {
-              TextEditingController folderController = TextEditingController();
-              await openDialogForFolder(
-                  context: context, folderController: folderController);
-
-              String val = folderController.text;
-
-              if (val.isNotEmpty) {
-                Map<String, dynamic> emptyFolder = {};
-                widget.bm.addEntries({val: emptyFolder}.entries);
-
-                await BookMarkStorage().saveToStorage();
-              }
-
-              setState(() {});
-            },
-          ),
-          SpeedDialChild(
-            child: const Icon(Icons.add_link),
-            label: "Add Bookmark",
-            backgroundColor: Colors.green,
-            onTap: () async {
-              TextEditingController nameController = TextEditingController();
-
-              TextEditingController linkController = TextEditingController();
-              await openDialogForBookmark(
-                  context: context,
-                  nameController: nameController,
-                  linkController: linkController);
-
-              String nameVal = nameController.text;
-              String linkVal = linkController.text;
-
-              if ((nameVal.isNotEmpty) && (linkVal.isNotEmpty)) {
-                widget.bm.addEntries({nameVal: linkVal}.entries);
-
-                await BookMarkStorage().saveToStorage();
-              }
-
-              setState(() {});
-            },
-          )
-        ],
       ),
     );
   }
@@ -459,10 +468,10 @@ class _FolderTileState extends State<FolderTile> {
         child: Card(
           child: ListTile(
             title: Text(widget.folderName),
-            leading: const Icon(Icons.folder),
+            leading: const Icon(Icons.folder, color: Colors.blue),
             subtitle: Text(widget.bm[widget.folderName].length.toString()),
             selected: widget.isSelected,
-            selectedTileColor: widget.isSelected ? Colors.pinkAccent : null,
+            selectedTileColor: widget.isSelected ? Colors.pink[100] : null,
             trailing: widget.isSelected ? const Icon(Icons.check) : null,
           ),
         ),
@@ -587,9 +596,9 @@ class _BookMarkTileState extends State<BookMarkTile> {
         child: Card(
           child: ListTile(
             selected: widget.isSelected,
-            selectedTileColor: widget.isSelected ? Colors.pinkAccent : null,
+            selectedTileColor: widget.isSelected ? Colors.pink[100] : null,
             title: Text(widget.bookMarkName),
-            leading: const Icon(Icons.link),
+            leading: const Icon(Icons.link, color: Colors.green),
             subtitle: Text(widget.bookMarkLink),
             trailing: widget.isSelected ? const Icon(Icons.check) : null,
           ),
